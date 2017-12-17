@@ -1,0 +1,8 @@
+target/
+.settings/
+methods_exe/
+JBiclustGE_RLibs/
+.jbclustgestatus
+properties/
+install_packages_local.sh
+.RData
