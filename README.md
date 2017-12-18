@@ -1,6 +1,6 @@
 # JBiclustGE
 
-Please visit [website](http://darwin.di.uminho.pt/jbiclustge/) with more detailed information.
+Please visit [website](https://jbiclustge.github.io/) with more detailed information.
 
 Is an application programming interface (API) developed in the Java language, that comprises 21 biclustering methods to be used in the context of gene expression data analysis. Currently, this application integrates the following biclustering algorithms:
 
