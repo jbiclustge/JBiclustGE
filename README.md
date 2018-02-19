@@ -35,3 +35,12 @@ This application also provides additional features such as:
 * Visualization of biclustering results (Heatmaps and Parallel coordinates).  
 
 
+## JBiclustGE-GUI
+Please visit the [JBiclustGE-GUI](https://github.com/jbiclustge/JBiclustGE-GUI) repository that contains friendly graphical interfaces to make use of the functionalities provided by this API.
+
+## JBiclustGE-CLI
+Please visit the [JBiclustGE-CLI](https://github.com/jbiclustge/JBiclustGE-CLI) repository that contains a command-line interface to make use of the algorithms provided by this API.
+
+
+
+
