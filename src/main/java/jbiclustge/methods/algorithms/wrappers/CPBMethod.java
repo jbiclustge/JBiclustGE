@@ -24,16 +24,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.math3.exception.NumberIsTooSmallException;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
@@ -47,16 +44,13 @@ import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.fileutils.MTUDirUtils;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.ioutils.writers.MTUWriterUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.stringutils.MTUStringUtils;
-import pt.ornrocha.stringutils.ReusableInputStream;
-import pt.ornrocha.swingutils.progress.GeneralProcessProgressionChecker;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -162,7 +156,7 @@ public class CPBMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 	protected String workingdir;
 	
 	/** The starttime. */
-	private Date starttime ;
+	private Instant start;
 	
 	private Thread stop;
 	
@@ -481,13 +475,7 @@ public class CPBMethod extends AbstractBiclusteringAlgorithmCaller implements IB
     	return this;
     }
     
-    /* (non-Javadoc)
-     * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-     */
-    @Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+ 
 
 	/* (non-Javadoc)
 	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#runAlgorithm()
@@ -495,7 +483,7 @@ public class CPBMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 	@Override
 	protected boolean runAlgorithm() throws Exception {
 
-			starttime =Calendar.getInstance().getTime();
+			start = Instant.now();
 		    initConfig();
 		    initPCBSeedData(initshuffleSeeddata);
 		    initPCBSeedData(pcbinitfile);
@@ -559,9 +547,7 @@ public class CPBMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 		int exitval=p.waitFor();
 		
 		if(exitval==0){
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			return true;
 		}
 		else{
@@ -989,13 +975,20 @@ public class CPBMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 		for (int i = 0; i < list.size(); i++) {
 			BiclusterResult result=list.get(i);
 			
-			/*System.out.println("MINGenes: "+minrows+"  Genes: "+result.getNumberGenes()+" Min Conds: "+mincolumns+"  Conditions: "+result.getNumberConditions());
-			if(result.getNumberGenes()>minrows && result.getNumberConditions()>mincolumns){
+			//System.out.println("MINGenes: "+minrows+"  Genes: "+result.getNumberGenes()+" Min Conds: "+mincolumns+"  Conditions: "+result.getNumberConditions());
+			//System.out.println(result.getExpressionDataset().numberGenes());
+			/*if(result.getNumberGenes()>minrows && result.getNumberConditions()>mincolumns){
 				
 				filteredsize.add(result);
 				
 			}*/
-			
+			/*System.out.println(result.getNumberGenes()>minrows);
+			System.out.println(result.getNumberGenes()+" > "+minrows);
+			System.out.println(result.getNumberGenes()<result.getExpressionDataset().numberGenes());
+			System.out.println(result.getNumberConditions()>mincolumns);
+			System.out.println(result.getNumberConditions()<result.getExpressionDataset().numberConditions());
+			System.out.println(result.getNumberConditions()+" < "+result.getExpressionDataset().numberConditions());
+			System.out.println("\n\n");*/
 			if(result.getNumberGenes()>minrows && 
 			   result.getNumberGenes()<result.getExpressionDataset().numberGenes() &&
 			   result.getNumberConditions()>mincolumns &&

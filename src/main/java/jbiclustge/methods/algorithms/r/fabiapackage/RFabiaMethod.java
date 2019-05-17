@@ -21,9 +21,8 @@
 package jbiclustge.methods.algorithms.r.fabiapackage;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -40,11 +39,10 @@ import jbiclustge.methods.algorithms.r.components.FabiaCenteringMethod;
 import jbiclustge.methods.algorithms.r.components.FabiaNormalizationMethod;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -745,9 +743,14 @@ public class RFabiaMethod extends RBiclustAlgorithmCaller{
 		try {
 			LogMessageCenter.getLogger().toClass(getClass()).addInfoMessage("Starting Fabia clustering method...please wait");
 			
-			loadExpressionMatrixInREnvironment();
+			//loadExpressionMatrixInREnvironment();
+			loadLabeledExpressionMatrixInREnvironment();
+			
+			if(nbics>expressionset.numberConditions()) // because if the number of biclusters is higher than the number of the conditions in dataset, fabia will not return any results 
+				nbics=expressionset.numberConditions();
+			
          
-			Date starttime =Calendar.getInstance().getTime();
+			Instant start = Instant.now();
 			rsession.silentlyEval(getResultOutputName()+" <- fabia("+inputmatrixname+", p="+String.valueOf(nbics)+","
 					+ " alpha="+String.valueOf(alpha)+", cyc="+String.valueOf(numberiterations)+", spl="+String.valueOf(spartnessprior)+","
 							+ " spz="+String.valueOf(spartnessfactors)+", non_negative="+getNonNegativeFactorsState()+","
@@ -756,9 +759,7 @@ public class RFabiaMethod extends RBiclustAlgorithmCaller{
 													+ " lL="+String.valueOf(maxrowsinbic)+", bL="+String.valueOf(cyclestarts)+")");
            
 
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 
 			
 		} catch (Exception e) {
@@ -808,7 +809,8 @@ public class RFabiaMethod extends RBiclustAlgorithmCaller{
 			ArrayList<String> genesids=genenames.get(i);
 			ArrayList<String> condids=conditionnames.get(i);
 			if((genesids!=null && genesids.size()>0) && (condids!=null && condids.size()>0)){
-				BiclusterResult res =new BiclusterResult(expressionset, genesids, condids);
+				//BiclusterResult res =new BiclusterResult(expressionset, genesids, condids);
+				BiclusterResult res =new BiclusterResult(expressionset,true, genesids, condids);
 				res.appendAdditionalInfo("Gene_Scores", genescores.get(i));
 				res.appendAdditionalInfo("Condition_Scores", conditionscores.get(i));
 				listofbiclusters.add(res);

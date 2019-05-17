@@ -22,9 +22,8 @@ package jbiclustge.methods.algorithms.r.biclustpackage;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -36,12 +35,11 @@ import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.methods.algorithms.r.RBiclustAlgorithmCaller;
 import jbiclustge.methods.algorithms.r.components.BCPlaidClusterType;
 import jbiclustge.rtools.JavaToRUtils;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -578,9 +576,10 @@ public class RPlaidMethod extends RBiclustAlgorithmCaller{
 	protected boolean runAlgorithm() throws Exception {
 		
 		try {
-			loadExpressionMatrixInREnvironment();
+			//loadExpressionMatrixInREnvironment();
+			loadLabeledExpressionMatrixInREnvironment();
 
-			Date starttime =Calendar.getInstance().getTime();
+			Instant start = Instant.now();
 			rsession.silentlyEval(getResultOutputName()+" <- biclust("+inputmatrixname+", method=BCPlaid(),"
 					+ " cluster=\""+clustertype.toString()+"\", fit.model ="+fitmodelformula+","
 							+ " background ="+JavaToRUtils.convertBooleanToR(background)+", background.layer ="+setBackgroundLayer()+","
@@ -589,9 +588,7 @@ public class RPlaidMethod extends RBiclustAlgorithmCaller{
 													+ " max.layers ="+String.valueOf(maxlayers)+", iter.startup ="+String.valueOf(iterstartup)+", iter.layer ="+String.valueOf(iterlayer)+","
 															+ " verbose ="+JavaToRUtils.convertBooleanToR(verbose)+")",true);
 			
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			
 	        writeBiclusterResultsToFileWithOriginalAlgorithmMethod();
 			

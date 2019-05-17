@@ -20,7 +20,7 @@ package jbiclustge.methods;
 import java.io.IOException;
 
 import jbiclustge.results.biclusters.containers.BiclusterList;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 
 // TODO: Auto-generated Javadoc
 /**

@@ -109,4 +109,10 @@ public class COALESCEResultsFileWriter extends AbstractProcessProgressionChecker
 		return outfilepath;
 	}
 
+	@Override
+	public AbstractProcessProgressionChecker copyInstance() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

@@ -45,7 +45,7 @@ import jbiclustge.enrichmentanalysistools.common.EnrichmentAnalysisResultsContai
 import jbiclustge.reporters.interfaces.IGSEABiclusteringReporter;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.JBiGePropertiesManager;
+import jbiclustge.utils.props.JBiGePropertiesManager;
 import pt.ornrocha.collections.MTUMapUtils;
 import pt.ornrocha.fileutils.MTUDirUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
@@ -489,7 +489,7 @@ public class BiclusteringTaskExcelReporter implements IGSEABiclusteringReporter{
 	 */
 	private int writeSingleBiclusterEnrichmentAnalysis(Sheet sh, EnrichmentAnalysisResultsContainer bicinfo, int currentrow,int currentbicnumber, XSSFCellStyle style){
 		
-		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapGOTermToGoName();
+		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapTermIDToTermName();
 		int cr=currentrow;
 		int nrows=0;
 		
@@ -505,16 +505,16 @@ public class BiclusteringTaskExcelReporter implements IGSEABiclusteringReporter{
 			//r1.createCell(0).setCellValue("");
 				row.createCell(1).setCellValue(termid);
 				row.createCell(2).setCellValue(termidtoGtermname.get(termid));
-				if(bicinfo.getMapGOTerm2NumberAnnotatedPopulationGenes()!=null)
-					row.createCell(3).setCellValue(bicinfo.getMapGOTerm2NumberAnnotatedPopulationGenes().get(termid));
-				if(bicinfo.getMapGOTerm2NumberAnnotatedStudyGenes()!=null)
-					row.createCell(4).setCellValue(bicinfo.getMapGOTerm2NumberAnnotatedStudyGenes().get(termid));
-				if(bicinfo.mapMapGOTerm2NumberSignificantAnnotatedGenes()!=null)
-					row.createCell(5).setCellValue(bicinfo.mapMapGOTerm2NumberSignificantAnnotatedGenes().get(termid));
-				if(bicinfo.getGOTermspvalues()!=null)
-					row.createCell(6).setCellValue(bicinfo.getGOTermspvalues().get(termid));
-				if(bicinfo.getGOTermsadjustedpvalues()!=null)
-					row.createCell(7).setCellValue(bicinfo.getGOTermsadjustedpvalues().get(termid));
+				if(bicinfo.getMapTermIDs2NumberAnnotatedPopulationGenes()!=null)
+					row.createCell(3).setCellValue(bicinfo.getMapTermIDs2NumberAnnotatedPopulationGenes().get(termid));
+				if(bicinfo.getMapTermIDs2NumberAnnotatedStudyGenes()!=null)
+					row.createCell(4).setCellValue(bicinfo.getMapTermIDs2NumberAnnotatedStudyGenes().get(termid));
+				if(bicinfo.mapMapTermIDs2NumberSignificantAnnotatedGenes()!=null)
+					row.createCell(5).setCellValue(bicinfo.mapMapTermIDs2NumberSignificantAnnotatedGenes().get(termid));
+				if(bicinfo.getTermIDspvalues()!=null)
+					row.createCell(6).setCellValue(bicinfo.getTermIDspvalues().get(termid));
+				if(bicinfo.getTermIDsadjustedpvalues()!=null)
+					row.createCell(7).setCellValue(bicinfo.getTermIDsadjustedpvalues().get(termid));
 				nrows++;
 				cr++;
 			}
@@ -605,7 +605,7 @@ public class BiclusteringTaskExcelReporter implements IGSEABiclusteringReporter{
 		
 		EnrichmentAnalysisResultList l=enrichmentresults.filterAndProcessResults(pvalue, useadjustedpvalues);
 		
-		LinkedHashMap<String, Double> termidfrequency=l.getGotermFrequency();
+		LinkedHashMap<String, Double> termidfrequency=l.getTermidsFrequency();
 		
 		Row rfreq=sh.createRow(currentrownumber);
 		Cell cbf=rfreq.createCell(0);
@@ -624,7 +624,7 @@ public class BiclusteringTaskExcelReporter implements IGSEABiclusteringReporter{
 		  for (String tid : termidfrequency.keySet()) {
 			   Row ro=sh.createRow(currentrownumber);
 				ro.createCell(0).setCellValue(tid);
-				ro.createCell(1).setCellValue(enrichmentresults.getGoid2goterm().get(tid));
+				ro.createCell(1).setCellValue(enrichmentresults.gettermid2termname().get(tid));
 				ro.createCell(2).setCellValue(termidfrequency.get(tid)*100);
 				currentrownumber++;
 		 }
@@ -665,7 +665,7 @@ public class BiclusteringTaskExcelReporter implements IGSEABiclusteringReporter{
 	 */
 	private int writeSingleBiclusterEnrichmentAnalysiswithpvaluecutoff(Sheet sh, EnrichmentAnalysisResultsContainer bicinfo, ArrayList<String> gotermlowerpvalue,Map<String, String> mapofprobset2geneidused,int currentrow,int currentbicnumber, XSSFCellStyle style){
 		
-		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapGOTermToGoName();
+		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapTermIDToTermName();
 		int cr=currentrow;
 		int nrows=0;
 		Row row=null;
@@ -681,15 +681,15 @@ public class BiclusteringTaskExcelReporter implements IGSEABiclusteringReporter{
 				row.createCell(1).setCellValue(termid);
 			    row.createCell(2).setCellValue(termidtoGtermname.get(termid));
 			    
-			    if(bicinfo.getGOTermspvalues()!=null)
-			    	row.createCell(3).setCellValue(bicinfo.getGOTermspvalues().get(termid));
-			    if(bicinfo.getGOTermsadjustedpvalues()!=null)
-			    	row.createCell(4).setCellValue(bicinfo.getGOTermsadjustedpvalues().get(termid));
+			    if(bicinfo.getTermIDspvalues()!=null)
+			    	row.createCell(3).setCellValue(bicinfo.getTermIDspvalues().get(termid));
+			    if(bicinfo.getTermIDsadjustedpvalues()!=null)
+			    	row.createCell(4).setCellValue(bicinfo.getTermIDsadjustedpvalues().get(termid));
 			    
-			    if(bicinfo.getGenesAssociatedToGoTerm(termid)!=null)
-			    	row.createCell(5).setCellValue(String.valueOf(bicinfo.getGenesAssociatedToGoTerm(termid)));
-			    if(bicinfo.getGenesAssociatedToGoTerm(termid)!=null && mapofprobset2geneidused!=null){
-			    	row.createCell(6).setCellValue(String.valueOf(transformgeneidtoprobsetid(bicinfo.getGenesAssociatedToGoTerm(termid),mapofprobset2geneidused)));
+			    if(bicinfo.getGenesAssociatedToTermID(termid)!=null)
+			    	row.createCell(5).setCellValue(String.valueOf(bicinfo.getGenesAssociatedToTermID(termid)));
+			    if(bicinfo.getGenesAssociatedToTermID(termid)!=null && mapofprobset2geneidused!=null){
+			    	row.createCell(6).setCellValue(String.valueOf(transformgeneidtoprobsetid(bicinfo.getGenesAssociatedToTermID(termid),mapofprobset2geneidused)));
 			    }
 			    
 			    nrows++;

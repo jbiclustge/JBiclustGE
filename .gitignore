@@ -6,3 +6,7 @@ JBiclustGE_RLibs/
 properties/
 install_packages_local.sh
 .RData
+.configured
+.installdone
+.jbiclustgestatus
+.classpath

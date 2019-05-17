@@ -23,12 +23,10 @@ package jbiclustge.methods.algorithms.wrappers;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,16 +39,14 @@ import jbiclustge.methods.algorithms.wrappers.components.BBCNormalizationMethod;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
-import jbiclustge.utils.properties.CommandsProcessList;
+import jbiclustge.utils.props.AlgorithmProperties;
+import jbiclustge.utils.props.CommandsProcessList;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.stringutils.MTUStringUtils;
 import pt.ornrocha.stringutils.ReusableInputStream;
 import pt.ornrocha.swingutils.progress.GeneralProcessProgressionChecker;
-import pt.ornrocha.systemutils.OSystemUtils;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -297,7 +293,9 @@ public class BBCMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 		
 		ProcessBuilder build= new ProcessBuilder(cmds);
 		build.directory(new File(tempfolder));
-		Date starttime =Calendar.getInstance().getTime();
+		
+		Instant start = Instant.now();
+		
 		final Process p =build.start();
 		InputStream inputstr =p.getInputStream();
 		ReusableInputStream errorstr =new ReusableInputStream(p.getErrorStream());
@@ -328,9 +326,7 @@ public class BBCMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 
 		int exitval=p.waitFor();
 		if(exitval==0){
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			return true;
 		}
 		else{
@@ -373,7 +369,8 @@ public class BBCMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 	private void configureInputData() throws IOException{
 		tempfolder=SystemFolderTools.createRandomTemporaryProcessFolderWithNamePrefix("BBC");
 		datafilepath=FilenameUtils.concat(tempfolder, MTUStringUtils.shortUUID()+".txt");
-		expressionset.writeExpressionDatasetToFile(datafilepath);
+		//expressionset.writeExpressionDatasetToFile(datafilepath);
+		expressionset.writeExpressionDatasetLabeledFormatToFile(datafilepath);
 		outputfilepath=FilenameUtils.concat(tempfolder, "bbc_results.txt");
 	}
 	
@@ -456,9 +453,10 @@ public class BBCMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 				else if(tag==1){
 					Matcher mg=tp.matcher(line);
 					if(mg.find()){
-						String genename=mg.group(2);
+						String genelabelname=mg.group(2);
+						String genename=expressionset.getGeneNameFromLabel(genelabelname);
 						String geneeffect=genename+": "+mg.group(3);
-						genes.add(genename);
+						genes.add(genelabelname);
 						geneeffects.add(geneeffect);
 	
 					}
@@ -466,15 +464,16 @@ public class BBCMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 				else if(tag==2){
 					Matcher mc=tp.matcher(line);
 					if(mc.find()){
-						String condname=mc.group(2);
+						String condlabelname=mc.group(2);
+						String condname=expressionset.getConditionNameFromLabel(condlabelname);
 						String condeffect=condname+": "+mc.group(3);
-						conds.add(condname);
+						conds.add(condlabelname);
 						condeffects.add(condeffect);
 					}
 				}
 				if(save && tag==0){
 					if(genes!=null && genes.size()>0 && conds!=null && conds.size()>0){
-						BiclusterResult res=new BiclusterResult(expressionset, genes, conds);
+						BiclusterResult res=new BiclusterResult(expressionset,true, genes, conds);
 						if(bicmaineffect!=null)
 							res.appendAdditionalInfo("bicluster main effect", bicmaineffect);
 						if(geneeffects!=null)
@@ -495,13 +494,6 @@ public class BBCMethod extends AbstractBiclusteringAlgorithmCaller implements IB
 	}
 	
 	
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
 
 	/* (non-Javadoc)
 	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getReportRunningParameters()

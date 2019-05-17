@@ -9,10 +9,9 @@
 package jbiclustge.methods.algorithms.java.penalizedplaid;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -21,11 +20,10 @@ import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -492,13 +490,7 @@ public class PenalizedPlaidMethod extends AbstractBiclusteringAlgorithmCaller{
 		
 	}
 	
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 	
 	/**
 	 * Load expression data info.
@@ -525,7 +517,7 @@ public class PenalizedPlaidMethod extends AbstractBiclusteringAlgorithmCaller{
 	 */
 	private void execute() throws Exception{
 		
-		Date starttime =Calendar.getInstance().getTime();
+		Instant start = Instant.now();
 		
 		double[][] data1 = new double[n][p];
 		double[] lik = new double[sample + burninsample];
@@ -782,9 +774,7 @@ public class PenalizedPlaidMethod extends AbstractBiclusteringAlgorithmCaller{
 			//System.out.println("LambdaEstimate" + Namefile + "= " + moylambda);
 		}
 		
-		Date endtime=Calendar.getInstance().getTime();
-		long runtime=endtime.getTime()-starttime.getTime();	
-		runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+		saveElapsedTime(start);
 		
 		
 	}

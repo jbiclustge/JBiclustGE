@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import jbiclustge.results.biclusters.containers.BiclusterList;
-import jbiclustge.utils.properties.AlgorithmProperties;
-import jbiclustge.utils.properties.JBiGePropertiesManager;
+import jbiclustge.utils.props.AlgorithmProperties;
+import jbiclustge.utils.props.JBiGePropertiesManager;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
@@ -356,6 +356,7 @@ public abstract class EnrichmentAnalyserProcessor {
         
 		if(listofbiclusters.size()>0){
 			changesupport.firePropertyChange(FIREPROPERTYGSEAANALYSERCHANGENAME, null, getTypeAnalyserProcessor().toString());
+			
 			if(valid()){
 				this.maxpvalue=getMaxAllowedPValue();
 				runAnalysis();

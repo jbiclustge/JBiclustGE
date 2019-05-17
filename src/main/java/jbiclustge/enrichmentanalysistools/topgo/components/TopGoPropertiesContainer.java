@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import jbiclustge.enrichmentanalysistools.common.pvaluesAdjustMethod;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import pt.ornrocha.propertyutils.EnhancedProperties;
 
 // TODO: Auto-generated Javadoc
@@ -80,7 +82,7 @@ public class TopGoPropertiesContainer extends EnhancedProperties{
 	public static final String DISCARDUNANNOTATEDGENES="discard_unannotated_genes";
 	
 	/** The Constant MAPPROBEID2GENEID. */
-	public static final String MAPPROBEID2GENEID="file_with_gene_expression_identifiers_to_gene_annotation_identifiers";
+	//public static final String MAPPROBEID2GENEID="file_with_gene_expression_identifiers_to_gene_annotation_identifiers";
 	
 	
 	/**
@@ -321,7 +323,7 @@ public class TopGoPropertiesContainer extends EnhancedProperties{
 	 *
 	 * @param method the new MTC method
 	 */
-	public void setMTCMethod(TopGopvaluesAdjustMethod method){
+	public void setMTCMethod(pvaluesAdjustMethod method){
 		addPropertyKey(MCTMETHOD, method.toString(),"Specifies the multiple test correction method for p-values. Possible values: holm, hochberg, bonferroni, BH, BY, fdr and none (default=none)."
 				+ " This functionality do not take part of topGo, it is an external function.");
 	}
@@ -474,7 +476,7 @@ public class TopGoPropertiesContainer extends EnhancedProperties{
 				NODESIZE,
 				MCTMETHOD,
 				DISCARDUNANNOTATEDGENES,
-				MAPPROBEID2GENEID
+				PropertyLabels.MAPPROBEID2GENEID
 		};
 		String[] defaultvalues=new String[]{TopgoOntology.BP.getGOAspect().getGOType(),TopGOAlgorithm.classic.toString(),TopGOStatistic.fisher.toString(),"5","none",String.valueOf(true),""};
 		String[] comments=new String[] {

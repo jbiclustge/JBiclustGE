@@ -21,9 +21,8 @@
 package jbiclustge.methods.algorithms.java.bibit;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -34,10 +33,9 @@ import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.arrays.MTUMatrixUtils;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -256,12 +254,12 @@ public class BibitMethod extends AbstractBiclusteringAlgorithmCaller{
 		String[] defaultvalues=new String[]{"2","2","0","16","1","false"};
 		
 		String[] comments=new String[] {
-				"Minimum number of genes allowed in a valid bicluster",
-				"Minimum number of conditions allowed in a valid bicluster",
-				"Number of bicluster to find. If value is zero the algorithm will return the maximum number of biclusters that can find (default=0)",
-				"Number of bits to use at the encoding phase default=16",
-				"Maximum value in the discretized dataset. From this value, BiBit will binarize the dataset generating max_value different ones",
-				"If true, the maximum value of expression dataset will be used as the maximum value in the discretized dataset (previous parameter)"
+				"[Integer] Minimum number of genes allowed in a valid bicluster",
+				"[Integer] Minimum number of conditions allowed in a valid bicluster",
+				"[Integer] Number of bicluster to find. If value is zero the algorithm will return the maximum number of biclusters that can find (default=0)",
+				"[Integer] Number of bits to use at the encoding phase default=16",
+				"[Integer] Maximum value in the discretized dataset. From this value, BiBit will binarize the dataset generating max_value different ones (default=1)",
+				"[Boolean] If true, the maximum value of expression dataset will be used as the maximum value in the discretized dataset (previous parameter)"
 				
 		};
 		
@@ -290,10 +288,12 @@ public class BibitMethod extends AbstractBiclusteringAlgorithmCaller{
 	 */
 	@Override
 	protected boolean runAlgorithm() throws Exception {
+
 		double[][] expressionmatrix=expressionset.getexpressionDataMatrix();
 		if(usemaxvalueasreference)
 			maxdiscretizedvalue=(int)MTUMatrixUtils.maxValueOfMatrix(expressionmatrix);
-		//System.out.println(maxdiscretizedvalue);
+		
+        //System.out.println("maxdiscretizedvalue: "+maxdiscretizedvalue);
 	    matrix=new BibitMatrix(expressionmatrix, patternsize);
 	    int pow=(int) Math.pow(2,patternsize);
 		
@@ -303,7 +303,7 @@ public class BibitMethod extends AbstractBiclusteringAlgorithmCaller{
 	   this.listofbiclusters=new BiclusterList();
 	   
 	   
-	   Date starttime =Calendar.getInstance().getTime();
+	   Instant start = Instant.now();
 	   
 	   for(int i=maxdiscretizedvalue;i>=1 && run;i--){
 	//for(int i=maxdiscretizedvalue;i>=1 ;i--){   
@@ -338,10 +338,8 @@ public class BibitMethod extends AbstractBiclusteringAlgorithmCaller{
 			   }   
 		   }
 	   }
-	   
-	   Date endtime=Calendar.getInstance().getTime();
-	   long runtime=endtime.getTime()-starttime.getTime();	
-	   runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+
+	   saveElapsedTime(start);
 
 		return true;
 	}
@@ -355,13 +353,7 @@ public class BibitMethod extends AbstractBiclusteringAlgorithmCaller{
 		
 	}
 
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 
 	/* (non-Javadoc)
 	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getTemporaryWorkingDirectory()
@@ -408,7 +400,10 @@ public class BibitMethod extends AbstractBiclusteringAlgorithmCaller{
 		
 	}
 
-	
+	 public void reset() {
+		    run=true;
+	    	this.listofbiclusters=null;
+	 }
 
 	
 

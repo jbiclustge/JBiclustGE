@@ -148,6 +148,13 @@ public class BimaxResultsProcessor extends AbstractProcessProgressionChecker{
 		return listbiclusters;
 	}
 
+
+	@Override
+	public AbstractProcessProgressionChecker copyInstance() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 
 }

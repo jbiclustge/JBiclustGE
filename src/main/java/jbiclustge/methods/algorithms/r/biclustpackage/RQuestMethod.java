@@ -21,9 +21,8 @@
 package jbiclustge.methods.algorithms.r.biclustpackage;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -31,11 +30,10 @@ import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.methods.algorithms.r.RBiclustAlgorithmCaller;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -335,12 +333,10 @@ public class RQuestMethod extends RBiclustAlgorithmCaller{
 		try {
 			loadExpressionMatrixInREnvironment();
 
-			Date starttime =Calendar.getInstance().getTime();
+			Instant start = Instant.now();
 			rsession.silentlyEval(""+getResultOutputName()+" <- biclust("+inputmatrixname+", "+getInputParametersString()+")",true);
 			
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			
 	        writeBiclusterResultsToFileWithOriginalAlgorithmMethod();
 			

@@ -21,18 +21,14 @@
 package jbiclustge.methods.algorithms.r.fabiapackage;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedHashMap;
+import java.time.Instant;
 import java.util.Properties;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.methods.algorithms.r.components.FabiaCenteringMethod;
 import jbiclustge.methods.algorithms.r.components.FabiaNormalizationMethod;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -268,9 +264,13 @@ public class RFabiaSMethod extends RFabiaMethod{
 		
 		
 		try {
-			loadExpressionMatrixInREnvironment();
+			//loadExpressionMatrixInREnvironment();
+			loadLabeledExpressionMatrixInREnvironment();
+			
+			if(nbics>expressionset.numberConditions()) // because if the number of biclusters is higher than the number of the conditions in dataset, fabia will not return any results 
+				nbics=expressionset.numberConditions();
          
-			Date starttime =Calendar.getInstance().getTime();
+			Instant start = Instant.now();
 			
 			rsession.silentlyEval(getResultOutputName()+" <- fabias("+inputmatrixname+", p="+String.valueOf(nbics)+","
 					+ " alpha="+String.valueOf(alpha)+", cyc="+String.valueOf(numberiterations)+","
@@ -281,9 +281,7 @@ public class RFabiaSMethod extends RFabiaMethod{
            
 			//System.out.println(s.asString("summary("+getResultOutputName()+")"));
 
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			
 		} catch (Exception e) {
 			LogMessageCenter.getLogger().addCriticalErrorMessage("Error in execution of "+getAlgorithmName()+": ", e);

@@ -22,14 +22,12 @@ package jbiclustge.methods.algorithms.wrappers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -41,8 +39,8 @@ import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.progress.COALESCEResultsFileWriter;
 import jbiclustge.results.progress.COALESCEResultsProcessor;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
-import jbiclustge.utils.properties.CommandsProcessList;
+import jbiclustge.utils.props.AlgorithmProperties;
+import jbiclustge.utils.props.CommandsProcessList;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.stringutils.MTUStringUtils;
@@ -50,7 +48,6 @@ import pt.ornrocha.stringutils.ReusableInputStream;
 import pt.ornrocha.swingutils.progress.AbstractProcessProgressionChecker;
 import pt.ornrocha.swingutils.progress.GeneralProcessProgressionChecker;
 import pt.ornrocha.systemutils.OSystemUtils;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -171,7 +168,7 @@ public class COALESCEMethod extends AbstractBiclusteringAlgorithmCaller implemen
 	private boolean use2pass=false;
 	
 	/** The start time. */
-	private Date  startTime;
+	private Instant start;
 	
 	/** The usefastafile. */
 	// Temporary imput parameters
@@ -943,13 +940,7 @@ public class COALESCEMethod extends AbstractBiclusteringAlgorithmCaller implemen
 		return this;
 	}
 
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 
 	/* (non-Javadoc)
 	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#runAlgorithm()
@@ -961,7 +952,7 @@ public class COALESCEMethod extends AbstractBiclusteringAlgorithmCaller implemen
 		 configureInputData();
 		 
 		 //if(!use2pass)
-		 startTime = Calendar.getInstance().getTime();
+		 start = Instant.now();
 
 		 if(fastafilepath!=null){
 			 usefastafile=fastafilepath;
@@ -1047,10 +1038,7 @@ public class COALESCEMethod extends AbstractBiclusteringAlgorithmCaller implemen
 		int exitval=p.waitFor();
 		if(exitval==0){
 
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-startTime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
-			
+			saveElapsedTime(start);
 			
 			while (!resultprocessor.isResultsprocessed()) {
 				Thread.sleep(1000);
@@ -1182,9 +1170,11 @@ public class COALESCEMethod extends AbstractBiclusteringAlgorithmCaller implemen
 		outputfolder=SystemFolderTools.createRandomTemporaryProcessFolderWithNamePrefix("COALESCE");
 		pclinputfilepath=FilenameUtils.concat(outputfolder, MTUStringUtils.shortUUID()+".pcl");
 		if(mapofprobidstonames!=null)
-			expressionset.writeExpressionDatasetToPCLFileFormat(pclinputfilepath, mapofprobidstonames);
+			expressionset.writeExpressionDatasetLabeledFormatToPCLFileFormat(pclinputfilepath, mapofprobidstonames);
+			//expressionset.writeExpressionDatasetToPCLFileFormat(pclinputfilepath, mapofprobidstonames);
 		else
-			expressionset.writeExpressionDatasetToPCLFileFormat(pclinputfilepath);
+			expressionset.writeExpressionDatasetLabeledFormatToPCLFileFormat(pclinputfilepath);
+			//expressionset.writeExpressionDatasetToPCLFileFormat(pclinputfilepath);
 	}
 	
 /*	protected void deleteTempFiles() throws IOException{
@@ -1392,6 +1382,12 @@ public class COALESCEMethod extends AbstractBiclusteringAlgorithmCaller implemen
 	public void stopProcess() {
 		stop.start();
 		
+	}
+	
+	@Override
+	public void reset() {
+		use2pass=false;
+	    this.listofbiclusters=null;
 	}
 	
 	/*public static COALESCEMethod newInstance(ExpressionData data){

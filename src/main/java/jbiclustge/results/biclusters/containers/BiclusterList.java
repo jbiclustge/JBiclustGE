@@ -442,6 +442,10 @@ public class BiclusterList extends ArrayList<BiclusterResult> {
 		return OverlapAnalyser.filterBiclusterListWithOverlapThreshold(this, threshold, -1);
 	}
 	
+	public BiclusterList filterByOverlapTreshold(int numberbics, double threshold) throws Exception{
+		return OverlapAnalyser.filterBiclusterListWithOverlapThreshold(this, threshold, numberbics);
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.util.AbstractCollection#toString()
 	 */
@@ -857,7 +861,8 @@ public class BiclusterList extends ArrayList<BiclusterResult> {
 		
 		String filepath=null;
 		if(filename!=null){
-			filepath=MTUFileUtils.forceFilePathExtension(directory, filename, "bicge");
+			filepath=FilenameUtils.concat(directory, filename+".bicge");
+			//filepath=MTUFileUtils.forceFilePathExtension(directory, filename, "bicge");
 		}
 		else
 			filepath=FilenameUtils.concat(directory,"Biclusters_"+usedmethod+"_"+MTUTimeUtils.getCurrentDateAndTime("yyyy-MM-dd_HH-mm-ss")+".bicge");

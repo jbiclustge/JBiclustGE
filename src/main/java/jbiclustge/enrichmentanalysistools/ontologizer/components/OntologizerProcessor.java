@@ -38,6 +38,7 @@ import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import ontologizer.OntologizerCore.Arguments;
 import ontologizer.StudySetResultList;
+import ontologizer.association.AnnotationContext;
 import ontologizer.association.Association;
 import ontologizer.association.AssociationContainer;
 import ontologizer.association.AssociationParser;
@@ -66,6 +67,7 @@ import ontologizer.statistics.AbstractTestCorrection;
 import ontologizer.statistics.IResampling;
 import ontologizer.statistics.TestCorrectionRegistry;
 import ontologizer.types.ByteString;
+import pt.ornrocha.ioutils.writers.MTUWriterUtils;
 import pt.ornrocha.logutils.MTULogLevel;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 
@@ -302,15 +304,20 @@ public class OntologizerProcessor {
 					studySet.applyFilter(genefilter);
 		  }
 		 
-		 
+
 		 for (ByteString geneName : studySetList.getGeneSet())
 			{
 				if (!populationset.contains(geneName))
 					populationset.addGene(geneName,"");
 			}
-		 
+
 		 checkAssociation();
-		 this.goAssociations=new AssociationContainer(assocparser.getAssociations(), assocparser.getAnnotationMapping());
+		// System.out.println(assocparser.getAssociations());
+		// System.out.println(assocparser.getAnnotationMapping().getDbObjectID2Symbol());
+		 AnnotationContext ac=assocparser.getAnnotationMapping();
+		 if(ac==null)
+			 ac=new AnnotationContext(assocparser.getListOfObjectSymbols(), new HashMap<ByteString,ByteString>(), new HashMap<ByteString,ByteString>());
+		 this.goAssociations=new AssociationContainer(assocparser.getAssociations(), ac);
 		 checkPopulationUnannotatedGeneNames();
 		 findDuplicates();
 	 }
@@ -361,7 +368,8 @@ public class OntologizerProcessor {
 			String[] items=new String[populationgenes.size()];
 			items=populationgenes.toArray(items);
 			
-			this.populationset=(PopulationSet) StudySetFactory.createFromArray(items, true);	
+			this.populationset=(PopulationSet) StudySetFactory.createFromArray(items, true);
+			//MTUWriterUtils.writeListToFile("allgenespop.txt", allgenes);
 		}
 	 
 	 
@@ -518,7 +526,7 @@ public class OntologizerProcessor {
 				 String termname=new String(term.getName().toString());
 				 String gotermid=new String(term.getIDAsString());
 			 
-				 container.addMapGoTermIDWithGOTermName(gotermid, termname);
+				 container.addMapTermIDWithTermName(gotermid, termname);
 				 TermAnnotatedGenes genes = enumerator.getAnnotatedGenes(termid);
 				 
 
@@ -537,7 +545,7 @@ public class OntologizerProcessor {
 				 container.addNumberAnnotatedGenesToGOTerm(gotermid, annotatedstudygenes);
 			 
 				 int annotatedpopulationgenes=termproperty.annotatedPopulationGenes;
-				 container.addNumberPopulationGenesToGOTerm(gotermid,  annotatedpopulationgenes);
+				 container.addNumberPopulationGenesToTermID(gotermid,  annotatedpopulationgenes);
 			
 			 
 				 double p_adjusted=termproperty.p_adjusted;

@@ -25,6 +25,7 @@ import org.apache.commons.io.FilenameUtils;
 import jbiclustge.enrichmentanalysistools.ontologizer.components.OntologizerPropertiesContainer;
 import jbiclustge.enrichmentanalysistools.topgo.components.TopGoPropertiesContainer;
 import jbiclustge.propertiesmodules.PropertiesModules;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import pt.ornrocha.propertyutils.EnhancedPropertiesWithSubGroups;
 
 // TODO: Auto-generated Javadoc
@@ -82,7 +83,7 @@ public class GSEATemplates {
 	public static void writeGSEAWithTopGoTemplate(String dirpath, boolean useannotationdatabase) throws IOException{
 		EnhancedPropertiesWithSubGroups props=getGSEABaseTemplateProperties();
 		
-		props.setProperty(PropertiesModules.GSEAPROCESSOR, "topgo");
+		props.setProperty(PropertyLabels.GSEAPROCESSOR, "topgo");
 		String gseafilepath=FilenameUtils.concat(dirpath, "topGO_configuration.conf");
 		
 		if(useannotationdatabase)
@@ -90,7 +91,7 @@ public class GSEATemplates {
 		else
 			TopGoPropertiesContainer.writePropertiesFileToAnnotationFile(gseafilepath);
 		
-		props.setProperty(PropertiesModules.GSEACONFIGURATIONFILE, gseafilepath);
+		props.setProperty(PropertyLabels.GSEACONFIGURATIONFILE, gseafilepath);
 		
 		String filename=FilenameUtils.concat(dirpath, "Biclustering_GSEA_topGO_Profile.conf");
 		props.store(new FileWriter(filename), true);
@@ -105,11 +106,11 @@ public class GSEATemplates {
 	public static void writeGSEAWithOntologizerTemplate(String dirpath) throws IOException{
 		EnhancedPropertiesWithSubGroups props=getGSEABaseTemplateProperties();
 		
-		props.setProperty(PropertiesModules.GSEAPROCESSOR, "ontologizer");
+		props.setProperty(PropertyLabels.GSEAPROCESSOR, "ontologizer");
 		String gseafilepath=FilenameUtils.concat(dirpath, "Ontologizer_configuration.conf");
 		OntologizerPropertiesContainer.writeCompletePropertiesFileTemplate(gseafilepath);
 		
-		props.setProperty(PropertiesModules.GSEACONFIGURATIONFILE, gseafilepath);
+		props.setProperty(PropertyLabels.GSEACONFIGURATIONFILE, gseafilepath);
 		
 		String filename=FilenameUtils.concat(dirpath, "Biclustering_GSEA_Ontologizer_Profile.conf");
 		props.store(new FileWriter(filename), true);

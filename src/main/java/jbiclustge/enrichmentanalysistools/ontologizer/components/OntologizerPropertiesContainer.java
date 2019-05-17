@@ -24,7 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import jbiclustge.datatools.goannotation.components.GOAspect;
+import jbiclustge.annotation.goannotation.components.GOAspect;
 import pt.ornrocha.propertyutils.EnhancedProperties;
 
 // TODO: Auto-generated Javadoc

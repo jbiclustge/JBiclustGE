@@ -24,10 +24,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -36,21 +35,19 @@ import org.apache.commons.io.IOUtils;
 
 import jbiclustge.analysis.overlap.OverlapAnalyser;
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.IDiscretizationMethod;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.methods.BiMaxBinarizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.IDiscretizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.methods.BiMaxBinarizationMethod;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
-import jbiclustge.utils.properties.CommandsProcessList;
+import jbiclustge.utils.props.AlgorithmProperties;
+import jbiclustge.utils.props.CommandsProcessList;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.stringutils.ReusableInputStream;
 import pt.ornrocha.swingutils.progress.GeneralProcessProgressionChecker;
-import pt.ornrocha.systemutils.OSystemUtils;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -70,6 +67,9 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 	/** The Constant OVERLAPTHRESHOLD. */
 	public static final String OVERLAPTHRESHOLD="overlap_threshold";
 	
+	
+	public static final String BIMAXBINARIZATIONTHRESHOLD="binarization_threshold";
+	
 	/** The Constant NAME. */
 	public static final String NAME="Bimax";
 	
@@ -84,6 +84,8 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 	
 	/** The maxnumberbiclusters. */
 	private int maxnumberbiclusters=0;
+	
+	private double binarizationthreshold=0;
 	
 	/** The overlapthreshold. */
 	private double overlapthreshold=1.0;
@@ -240,6 +242,11 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		this.overlapthreshold=value;
 	}
 	
+	
+	
+	public void setBinarizationThreshold(double value) {
+		this.binarizationthreshold=value;
+	}
 	/**
 	 * Sets the number biclusters to find.
 	 *
@@ -285,16 +292,18 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 				MINGENES,
 				MINCONDITIONS,
 				MAXNUMBERBICLUSTERS,
+				BIMAXBINARIZATIONTHRESHOLD,
 				OVERLAPTHRESHOLD
 		};
 		
 		
-		String[] defaultvalues=new String[]{"0","0","0","1.0"};
+		String[] defaultvalues=new String[]{"0","0","0","0","1.0"};
 		
 		String[] comments=new String[] {
 				"biclusters output need to have at least that many genes, 0= no limits",
 				"biclusters output need to have at least that many conditions, 0= no limits",
 				"number of bicluster to find, (default=0 find maximum number of biclusters)",
+				"threshold to be applied in the binarization procedure (default=0,  find a threshold automatically)",
 				"overlap threshold, value between [0,1] interval. If value is equal to 1.0, the algorithm will return the maximum number of biclusters defined by user (default=1.0)\n.Otherwise only return the biclusters which respect overlap threshold"
 		};
 		
@@ -328,7 +337,9 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		this.mingenes=PropertiesUtilities.getIntegerPropertyValueValidLowerLimit(props, MINGENES, 0,0,true,this.getClass());
 		this.minconditions=PropertiesUtilities.getIntegerPropertyValueValidLowerLimit(props,MINCONDITIONS, 0,0,true,this.getClass());
 		this.maxnumberbiclusters=PropertiesUtilities.getIntegerPropertyValueValidLowerLimit(props,MAXNUMBERBICLUSTERS, 0,0,true,this.getClass());
+		this.binarizationthreshold=PropertiesUtilities.getDoublePropertyValueValidLowerLimit(props, BIMAXBINARIZATIONTHRESHOLD, 0.0, 0.0, true, this.getClass());
 		this.overlapthreshold=PropertiesUtilities.getDoublePropertyValueValidLimits(props, OVERLAPTHRESHOLD, 1.0, 0.0, 1.0, true, getClass());
+
 	}
 
 	/* (non-Javadoc)
@@ -343,7 +354,7 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		ProcessBuilder build= new ProcessBuilder(cmds);
 		build.directory(new File(workingpath));
 		
-		Date starttime =Calendar.getInstance().getTime();
+		Instant start = Instant.now();
 		final Process p =build.start();
 		InputStream inputstr =p.getInputStream();
 		ReusableInputStream errorstr =new ReusableInputStream(p.getErrorStream());
@@ -371,11 +382,10 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		});
 
 		int exitval=p.waitFor();
+		//System.out.println("EXIT: "+exitval);
 		
 		if(exitval==0){
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			return true;
 		}
 		else{
@@ -395,16 +405,10 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		if(overlapthreshold<1.0 && overlapthreshold>=0)
 			listofbiclusters=OverlapAnalyser.filterBiclusterListWithOverlapThreshold(listofbiclusters, overlapthreshold, maxnumberbiclusters);
 		SystemFolderTools.deleteTempDir(workingpath);
-		//FileUtils.deleteDirectory(new File(workingpath));
+	
 	}
 
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 	
 	/**
 	 * Parses the results file.
@@ -469,6 +473,10 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		String header=expressionset.numberGenes()+" "+expressionset.numberConditions()+" "+mingenes+" "+minconditions+" "+maxnumberbiclusters;
 		ArrayList<String> first=new ArrayList<>();
 		first.add(header);
+		
+		if(binarizationthreshold>0)
+			binarizationmethod=new BiMaxBinarizationMethod().setThreshold(binarizationthreshold);
+			
 		expressionset.writeBinarizedExpressionMatrixtoFile(datafilepath, binarizationmethod, " ",first);
 	}
 	
@@ -525,7 +533,8 @@ public class BimaxMethod extends AbstractBiclusteringAlgorithmCaller implements 
 	 */
 	@Override
 	protected String getTemporaryWorkingDirectory() {
-		return workingpath;
+		//return workingpath;
+		return null;
 	}
 
 	/* (non-Javadoc)

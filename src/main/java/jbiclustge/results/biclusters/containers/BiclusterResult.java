@@ -23,10 +23,8 @@ package jbiclustge.results.biclusters.containers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -38,7 +36,6 @@ import org.json.JSONObject;
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
 import jrplot.rbinders.components.dataframe.DefaultDataframeContainer;
 import jrplot.rbinders.components.dataframe.datatype.DoubleDataColumn;
-import jrplot.rbinders.components.dataframe.datatype.StringDataColumn;
 import jrplot.rbinders.components.dataframe.datatype.rownames.StringColumnRowNames;
 import jrplot.rbinders.components.interfaces.IDataFrameDataLoader;
 import pt.ornrocha.collections.MTUCollectionsUtils;
@@ -133,6 +130,9 @@ public class BiclusterResult implements Comparable<BiclusterResult>{
 			this.conditionnames=getConditionNames();
 		}
 	}
+	
+	
+
 
 	/**
 	 * Instantiates a new bicluster result.
@@ -192,6 +192,13 @@ public class BiclusterResult implements Comparable<BiclusterResult>{
 		this.genenames=genenameslist;
 		this.conditionnames=conditionslist;
 	}
+	
+	
+	public BiclusterResult(ExpressionData originaldataset,boolean islabelednames, ArrayList<String> genes, ArrayList<String> conditions) throws IOException{
+		this(originaldataset, islabelednames, genes, null, conditions, null);
+	}
+	
+	
 
 	/**
 	 * Instantiates a new bicluster result.
@@ -219,7 +226,11 @@ public class BiclusterResult implements Comparable<BiclusterResult>{
 	 * @param condindexes the condindexes
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public BiclusterResult(ExpressionData originaldataset, ArrayList<String> genenameslist, ArrayList<Integer> geneindexes, ArrayList<String> conditionslist, ArrayList<Integer> condindexes) throws IOException{
+	public BiclusterResult(ExpressionData originaldataset, ArrayList<String> genes, ArrayList<Integer> geneindexes, ArrayList<String> conditions, ArrayList<Integer> condindexes) throws IOException{
+		this(originaldataset, false, genes, geneindexes, conditions, condindexes);
+	}
+	
+	/*public BiclusterResult(ExpressionData originaldataset, ArrayList<String> genenameslist, ArrayList<Integer> geneindexes, ArrayList<String> conditionslist, ArrayList<Integer> condindexes) throws IOException{
 		this.originaldataset=originaldataset;
 		if(genenameslist!=null && geneindexes!=null && genenameslist.size()!=geneindexes.size())
 			throw new IOException("The list of gene names and gene indexes have diferent sizes");
@@ -249,10 +260,75 @@ public class BiclusterResult implements Comparable<BiclusterResult>{
 			else 
 				throw new IOException("Both condition names and conditon indexes have null values");
 
-
 		}
+	}*/
+	
+	public BiclusterResult(ExpressionData originaldataset,boolean islabelednames, ArrayList<String> genes, ArrayList<Integer> geneindexes, ArrayList<String> conditions, ArrayList<Integer> condindexes) throws IOException{
+		this.originaldataset=originaldataset;
 
+		if(genes!=null && geneindexes!=null && genes.size()!=geneindexes.size())
+			throw new IOException("The list of gene names and gene indexes have diferent sizes");
+		else if(conditions!=null && condindexes!=null && conditions.size()!=condindexes.size())
+			throw new IOException("The list of condition names and conditon indexes have diferent sizes");
+		else{
+
+			ArrayList<String> genenameslist=null;
+			ArrayList<String> conditionslist=null;
+
+			if(islabelednames) {
+
+				if(genes!=null) {
+					genenameslist=this.originaldataset.getGeneNamesFromLabelsFormat(genes);
+					if(geneindexes==null)
+						geneindexes=this.originaldataset.getGeneIndexesFromLabelsFormat(genes);
+				}
+
+				if(conditions!=null) {
+					conditionslist=this.originaldataset.getConditionNamesFromLabelsFormat(conditions);
+					if(condindexes==null)
+						condindexes=this.originaldataset.getConditionIndexesFromLabelsFormat(conditions);
+				}
+
+			}
+			else {
+				genenameslist=genes;
+				conditionslist=conditions;
+			}
+
+			if(genenameslist==null && geneindexes==null)
+				throw new IOException("Both gene names and gene indexes have null values");
+
+			else if(genenameslist!=null && geneindexes==null){
+				this.genenames=genenameslist;
+				this.genesindex=setIndexListFromNames(genenameslist,originaldataset.getGeneNamesList());
+			}
+			else if(genenameslist==null && geneindexes!=null){
+				this.genesindex=geneindexes;
+				this.genenames=getGeneNames();
+			}
+			else {
+				this.genenames=genenameslist;
+				this.genesindex=geneindexes;
+			}
+
+
+			if(conditionslist==null && condindexes==null)
+				throw new IOException("Both condition names and conditon indexes have null values");
+			else if(conditionslist!=null && condindexes==null){
+				this.conditionnames=conditionslist;
+				this.conditionsindex=setIndexListFromNames(conditionslist,originaldataset.getConditionsList());
+			}
+			else if(conditionslist==null && condindexes!=null){
+				this.conditionsindex=condindexes;
+				this.conditionnames=getConditionNames();
+			}
+			else {
+				this.conditionnames=conditionslist;
+				this.conditionsindex=condindexes;
+			}
+		}
 	}
+	
 
 	private BiclusterResult(int indexinresults,
 			ArrayList<Integer> genesindex,
@@ -797,7 +873,8 @@ public class BiclusterResult implements Comparable<BiclusterResult>{
 		for (int i = 0; i < names.size(); i++) {
 			String geneid=names.get(i);
 			if(!mappedgenes.containsKey(geneid))
-				throw new IOException("Gene ID ["+geneid+"] do not have a GO annotation associated");
+				System.out.println("Gene ID ["+geneid+"] do not have a GO annotation associated");
+				//throw new IOException("Gene ID ["+geneid+"] do not have a GO annotation associated");
 			else
 				res.add(mappedgenes.get(geneid));
 		}
@@ -846,6 +923,10 @@ public class BiclusterResult implements Comparable<BiclusterResult>{
 			loadConditionNamesFromIndexes();
 		return conditionnames;
 	}
+	
+	
+	
+	
 	
 	public String[] getConditionNamesArray(){
 		if(getConditionNames()!=null)

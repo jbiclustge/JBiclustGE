@@ -20,6 +20,7 @@ package jbiclustge.methods.algorithms;
 
 import java.util.ArrayList;
 
+import jbiclustge.methods.IBiclusterAlgorithm;
 import jbiclustge.methods.algorithms.java.bibit.BibitMethod;
 import jbiclustge.methods.algorithms.java.bicat.opsm.OPSMMethod;
 import jbiclustge.methods.algorithms.java.penalizedplaid.PenalizedPlaidMethod;
@@ -45,7 +46,6 @@ import jbiclustge.methods.algorithms.wrappers.CPBMethod;
 import jbiclustge.methods.algorithms.wrappers.QuBicMethod;
 import jbiclustge.methods.algorithms.wrappers.UBClustMethod;
 import jbiclustge.methods.algorithms.wrappers.UnibicMethod;
-import jbiclustge.methods.algorithms.wrappers.bimax.BimaxMethodCLib;
 import jbiclustge.methods.algorithms.wrappers.debi.DebiMethod;
 import pt.ornrocha.systemutils.OSystemUtils;
 
@@ -80,7 +80,7 @@ public enum BiclusteringMethod {
 	},*/
 	BIMAX{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "bimax";
 		}
 		
@@ -108,7 +108,7 @@ public enum BiclusteringMethod {
 	/** The bibit. */
 	BIBIT{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "bibit";
 		}
 		
@@ -136,7 +136,7 @@ public enum BiclusteringMethod {
 	/** The biclic. */
 	BICLIC{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "biclic";
 		}
 		
@@ -164,7 +164,7 @@ public enum BiclusteringMethod {
 	/** The opsm. */
 	OPSM{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "opsm";
 		}
 		
@@ -192,8 +192,8 @@ public enum BiclusteringMethod {
 	/** The cc. */
 	CC{
 		@Override
-		public String getName() {
-			return "cc";
+		public String getAlgorithmID() {
+			return "chengchurch";
 		}
 		
 		@Override
@@ -220,7 +220,7 @@ public enum BiclusteringMethod {
 	/** The plaid. */
 	PLAID{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "plaid";
 		}
 		
@@ -248,7 +248,7 @@ public enum BiclusteringMethod {
 	/** The penalizedplaid. */
 	PENALIZEDPLAID{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "penalizedplaid";
 		}
 		
@@ -276,7 +276,7 @@ public enum BiclusteringMethod {
 	/** The quest. */
 	QUEST{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "quest";
 		}
 		
@@ -304,7 +304,7 @@ public enum BiclusteringMethod {
 	/** The questord. */
 	QUESTORD{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "questord";
 		}
 		
@@ -332,7 +332,7 @@ public enum BiclusteringMethod {
 	/** The questmet. */
 	QUESTMET{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "questmet";
 		}
 		
@@ -360,7 +360,7 @@ public enum BiclusteringMethod {
 	/** The spectral. */
 	SPECTRAL{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "spectral";
 		}
 		
@@ -388,7 +388,7 @@ public enum BiclusteringMethod {
 	/** The xmotifs. */
 	XMOTIFS{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "xmotifs";
 		}
 		
@@ -416,7 +416,7 @@ public enum BiclusteringMethod {
 	/** The fabia. */
 	FABIA{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "fabia";
 		}
 		
@@ -444,7 +444,7 @@ public enum BiclusteringMethod {
 	/** The fabiap. */
 	FABIAP{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "fabiap";
 		}
 		
@@ -472,7 +472,7 @@ public enum BiclusteringMethod {
 	/** The fabias. */
 	FABIAS{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "fabias";
 		}
 		
@@ -500,7 +500,7 @@ public enum BiclusteringMethod {
 	/** The isa. */
 	ISA{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "isa";
 		}
 		
@@ -528,7 +528,7 @@ public enum BiclusteringMethod {
 	/** The bicfinder. */
 	BICFINDER{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "bicfinder";
 		}
 		
@@ -556,7 +556,7 @@ public enum BiclusteringMethod {
 	/** The bimineplus. */
 	BIMINEPLUS{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "bimineplus";
 		}
 		
@@ -584,7 +584,7 @@ public enum BiclusteringMethod {
 	/** The bicare. */
 	BICARE{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "bicare";
 		}
 		
@@ -612,7 +612,7 @@ public enum BiclusteringMethod {
 	/** The debi. */
 	DEBI{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "debi";
 		}
 		
@@ -641,7 +641,7 @@ public enum BiclusteringMethod {
 	/** The coalesce. */
 	COALESCE{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "coalesce";
 		}
 		
@@ -671,7 +671,7 @@ public enum BiclusteringMethod {
 	/** The cpb. */
 	CPB{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "cpb";
 		}
 		
@@ -699,7 +699,7 @@ public enum BiclusteringMethod {
 	/** The qubic. */
 	QUBIC{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "qubic";
 		}
 		
@@ -727,7 +727,7 @@ public enum BiclusteringMethod {
 	/** The unibic. */
 	UNIBIC{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "unibic";
 		}
 		
@@ -755,7 +755,7 @@ public enum BiclusteringMethod {
 	/** The bbc. */
 	BBC{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "bbc";
 		}
 		
@@ -783,7 +783,7 @@ public enum BiclusteringMethod {
 	/** The ubclust. */
 	UBCLUST{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "ubclust";
 		}
 		
@@ -810,7 +810,7 @@ public enum BiclusteringMethod {
 	
 	UNKNOWN{
 		@Override
-		public String getName() {
+		public String getAlgorithmID() {
 			return "unknown";
 		}
 		
@@ -840,8 +840,8 @@ public enum BiclusteringMethod {
 	 *
 	 * @return the name
 	 */
-	public String getName(){
-		return getName();
+	public String getAlgorithmID(){
+		return getAlgorithmID();
 	}
 	
 	/**
@@ -905,10 +905,22 @@ public enum BiclusteringMethod {
 			    	 return method;
 			     else if(method.getNameInMethodClass().toLowerCase().equals(name.toLowerCase()))
 			    	 return method;
-			     else if(method.getName().equals(name.toLowerCase()))
+			     else if(method.getAlgorithmID().equals(name.toLowerCase()))
 			    	 return method;
 			}
 		return BiclusteringMethod.UNKNOWN;
+	}
+	
+	public static String getAlgorithmIDFromMethodInstance(IBiclusterAlgorithm methodinstance) {
+		
+		if(methodinstance!=null) {
+			
+			for (BiclusteringMethod method : BiclusteringMethod.values()) {
+				if(methodinstance.getAlgorithmName().toLowerCase().equals(method.getNameInMethodClass().toLowerCase()))
+					return method.getAlgorithmID();
+			}
+		}
+		return null;
 	}
 	
 

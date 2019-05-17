@@ -26,12 +26,10 @@ package jbiclustge.methods.algorithms.wrappers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,15 +42,14 @@ import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
-import jbiclustge.utils.properties.CommandsProcessList;
+import jbiclustge.utils.props.AlgorithmProperties;
+import jbiclustge.utils.props.CommandsProcessList;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.stringutils.MTUStringUtils;
 import pt.ornrocha.stringutils.ReusableInputStream;
 import pt.ornrocha.swingutils.progress.GeneralProcessProgressionChecker;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -259,7 +256,7 @@ public class BiMinePlusMethod extends AbstractBiclusteringAlgorithmCaller implem
 		 
 	        ProcessBuilder build= new ProcessBuilder(cmds);
 		
-	        Date starttime =Calendar.getInstance().getTime();
+	        Instant start = Instant.now();
 			final Process p =build.start();
 			InputStream inputstr =p.getInputStream();
 			ReusableInputStream errorstr =new ReusableInputStream(p.getErrorStream());
@@ -288,21 +285,11 @@ public class BiMinePlusMethod extends AbstractBiclusteringAlgorithmCaller implem
 					
 				}
 			});
-			
-			/*stop=new Thread() {
-				@Override
-				public void run() {
-					 p.destroy();
-					 SystemFolderTools.deleteTempDir(tmpfolder);
-				}
-			};*/
-			
+				
 
 			int exitval=p.waitFor();
 			if(exitval==0){
-				Date endtime=Calendar.getInstance().getTime();
-				long runtime=endtime.getTime()-starttime.getTime();	
-				runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+				saveElapsedTime(start);
 				return true;
 			}
 			else{
@@ -351,7 +338,8 @@ public class BiMinePlusMethod extends AbstractBiclusteringAlgorithmCaller implem
 		tmpfolder=SystemFolderTools.createRandomTemporaryProcessFolderWithNamePrefix(getAlgorithmName());
 		datafilepath=FilenameUtils.concat(tmpfolder, provname+".txt");
 		resultsfilepath=FilenameUtils.concat(tmpfolder, provname+"_results"+".txt");
-		expressionset.writeExpressionDatasetToFile(datafilepath, true, false, "\t");
+		expressionset.writeExpressionDatasetLabeledFormatToFile(datafilepath, true, false, "\t");
+		//expressionset.writeExpressionDatasetToFile(datafilepath, true, false, "\t");
 	}
 	
 	/**
@@ -412,7 +400,8 @@ public class BiMinePlusMethod extends AbstractBiclusteringAlgorithmCaller implem
 			asr=m.group(3);
 		}
 		
-		BiclusterResult res =new BiclusterResult(expressionset, genenames,null, null, condindexes);
+		//BiclusterResult res =new BiclusterResult(expressionset, genenames,null, null, condindexes);
+		BiclusterResult res =new BiclusterResult(expressionset,true, genenames,null, null, condindexes);
 		if(asr!=null)
 		   res.appendAdditionalInfo("Average Spearman’s Rho",Double.parseDouble(asr));
 		
@@ -440,13 +429,7 @@ public class BiMinePlusMethod extends AbstractBiclusteringAlgorithmCaller implem
 		return new BiMinePlusMethod(data,props);
 	}
 
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 
 	/* (non-Javadoc)
 	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getTemporaryWorkingDirectory()

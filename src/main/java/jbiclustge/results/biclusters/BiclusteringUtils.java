@@ -31,7 +31,7 @@ import org.apache.commons.io.FilenameUtils;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.BiclusteringMethod;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -206,10 +206,10 @@ public class BiclusteringUtils {
 	 * @param name the name
 	 * @return the method from name
 	 */
-	public static AbstractBiclusteringAlgorithmCaller getMethodFromName(String name){
+	public static AbstractBiclusteringAlgorithmCaller getMethodFromAlgorithmID(String name){
 		if(name!=null)
 			for (BiclusteringMethod method : BiclusteringMethod.values()) {
-			   if(name.toLowerCase().equals(method.getName()))
+			   if(name.toLowerCase().equals(method.getAlgorithmID().toLowerCase()))
 				   return method.getInstance();
 			}
 		return null;
@@ -256,8 +256,8 @@ public class BiclusteringUtils {
 				//
 				AbstractBiclusteringAlgorithmCaller methodinstance=method.getInstance();
 				String filepath=FilenameUtils.concat(algmainpath, methodinstance.getAlgorithmName().toLowerCase()+"_configuration.conf");
-				if(method.getName().toLowerCase()!=methodinstance.getAlgorithmName().toLowerCase())
-					algpaths.put(method.getName().toLowerCase()+"_configuration_file", filepath);
+				if(method.getAlgorithmID().toLowerCase()!=methodinstance.getAlgorithmName().toLowerCase())
+					algpaths.put(method.getAlgorithmID().toLowerCase()+"_configuration_file", filepath);
 				else
 					algpaths.put(methodinstance.getAlgorithmName().toLowerCase()+"_configuration_file", filepath);
 				AlgorithmProperties.writeDefaultAlgorithmPropertiesToFile(algmainpath, methodinstance, true);

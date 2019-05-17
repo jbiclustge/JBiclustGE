@@ -5,10 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.IDiscretizationMethod;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.methods.BiMaxBinarizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.IDiscretizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.methods.BiMaxBinarizationMethod;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 
 public class JBimaxMethod extends AbstractBiclusteringAlgorithmCaller{
 
@@ -90,11 +90,7 @@ public class JBimaxMethod extends AbstractBiclusteringAlgorithmCaller{
 		
 	}
 
-	@Override
-	protected String getRunningTime() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 	@Override
 	protected LinkedHashMap<String, String> getReportRunningParameters() {

@@ -17,10 +17,12 @@
  */
 package jbiclustge.propertiesmodules.readers;
 
+import java.util.HashMap;
 import java.util.Properties;
 
-import jbiclustge.propertiesmodules.PropertiesModules;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.propertiesmodules.PropertyModuleLoader;
+import pt.ornrocha.propertyutils.PropertiesUtilities;
 
 
 
@@ -56,14 +58,8 @@ public class PlotsOptionsModuleLoader extends PropertyModuleLoader{
 	@Override
 	public void loadProperties() throws Exception {
 	
-		
-		if(props.containsKey(PropertiesModules.MAKEPARALLELCOORD) && 
-				props.getProperty(PropertiesModules.MAKEPARALLELCOORD).toLowerCase().equals("true"))
-			createparallelcord=true;
-		
-		if(props.containsKey(PropertiesModules.MAKEHEATMAP) && 
-				props.getProperty(PropertiesModules.MAKEHEATMAP).toLowerCase().equals("true"))
-			createheatmaps=true;
+		createparallelcord=PropertiesUtilities.getBooleanPropertyValue(props, PropertyLabels.MAKEPARALLELCOORD, false, getClass());
+		createheatmaps=PropertiesUtilities.getBooleanPropertyValue(props, PropertyLabels.MAKEHEATMAP, false, getClass());
 		
 	}
 
@@ -105,6 +101,18 @@ public class PlotsOptionsModuleLoader extends PropertyModuleLoader{
 		PlotsOptionsModuleLoader loader=new PlotsOptionsModuleLoader(props);
 		loader.loadProperties();
 		return loader;
+	}
+
+
+
+
+
+	@Override
+	public HashMap<String, Object> getMapOfProperties() {
+		HashMap<String, Object> param=new HashMap<>();
+		param.put(PropertyLabels.MAKEPARALLELCOORD, createparallelcord);
+		param.put(PropertyLabels.MAKEHEATMAP, createheatmaps);
+		return param;
 	}
 
 }

@@ -51,20 +51,22 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	/** The mapofprobset 2 geneidused. */
 	private Map<String, String> mapofprobset2geneidused;
 	
+	private Map<String, String> mapofgeneidused2probset=null;
+	
 	/** The gotermfrequencymap. */
-	private Multimap<String, Integer> gotermfrequencymap;
+	private Multimap<String, Integer> termidfrequencymap;
 	
 	/** The gotermpvaluemap. */
-	private Multimap<String, Double> gotermpvaluemap;
+	private Multimap<String, Double> termidpvaluemap;
 	
 	/** The goterm 2 associatedgenes. */
-	private LinkedHashMap<Integer, LinkedHashMap<String,ArrayList<String>>> goterm2associatedgenes;
+	private LinkedHashMap<Integer, LinkedHashMap<String,ArrayList<String>>> termids2associatedgenes;
 	
 	/** The significantgottermsperbicluster. */
-	private LinkedHashMap<Integer, Integer> significantgottermsperbicluster;
+	private LinkedHashMap<Integer, Integer> significanttermidsperbicluster;
 	
 	/** The goid 2 goterm. */
-	private LinkedHashMap<String, String> goid2goterm;
+	private LinkedHashMap<String, String> termid2termname;
 	
 	/** The pvaluetreshold. */
 	private Double pvaluetreshold=null;
@@ -93,11 +95,11 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 			BiclusterList associatedbiclusterlist,
 			boolean wasusedMCTMethod) {
 		this.mapofprobset2geneidused=mapofprobset2geneidused;
-		this.gotermfrequencymap=gotermfrequencymap;
-		this.gotermpvaluemap=gotermpvaluemap;
-		this.goterm2associatedgenes=goterm2associatedgenes;
-		this.significantgottermsperbicluster=significantgottermsperbicluster;
-		this.goid2goterm=goid2goterm;
+		this.termidfrequencymap=gotermfrequencymap;
+		this.termidpvaluemap=gotermpvaluemap;
+		this.termids2associatedgenes=goterm2associatedgenes;
+		this.significanttermidsperbicluster=significantgottermsperbicluster;
+		this.termid2termname=goid2goterm;
 		this.pvaluetreshold=pvaluetreshold;
 		this.useadjustedpvalues=useadjustedpvalues;
 		this.unannotatedGeneNames=unannotatedGeneNames;
@@ -113,10 +115,10 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 *
 	 * @return the goterm frequency
 	 */
-	public LinkedHashMap<String, Double> getGotermFrequency() {
+	public LinkedHashMap<String, Double> getTermidsFrequency() {
 		LinkedHashMap<String, Double> res=new LinkedHashMap<>();
-		for (String goid : gotermfrequencymap.keySet()) {
-			ArrayList<Integer> n=new ArrayList<>(gotermfrequencymap.get(goid));
+		for (String goid : termidfrequencymap.keySet()) {
+			ArrayList<Integer> n=new ArrayList<>(termidfrequencymap.get(goid));
 			double freq=(double)n.size()/this.size();
 			res.put(goid, freq);
 		}
@@ -129,10 +131,10 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 *
 	 * @return the goterm meanp value
 	 */
-	public LinkedHashMap<String, Double> getGotermMeanpValue() {
+	public LinkedHashMap<String, Double> gettermidMeanpValue() {
 		LinkedHashMap<String, Double> res=new LinkedHashMap<>();
-		for (String goid : gotermpvaluemap.keySet()) {
-			ArrayList<Double> values=new ArrayList<>(gotermpvaluemap.get(goid));
+		for (String goid : termidpvaluemap.keySet()) {
+			ArrayList<Double> values=new ArrayList<>(termidpvaluemap.get(goid));
 			double mean=new DescriptiveStatistics(MTUArrayUtils.convertDoubleListToArrayofdoubles(values)).getMean();
 			res.put(goid, mean);
 		}
@@ -149,8 +151,8 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 *
 	 * @return the goterm 2 associatedgenes
 	 */
-	public LinkedHashMap<Integer, LinkedHashMap<String, ArrayList<String>>> getGoterm2associatedgenes() {
-		return goterm2associatedgenes;
+	public LinkedHashMap<Integer, LinkedHashMap<String, ArrayList<String>>> getterm2associatedgenes() {
+		return termids2associatedgenes;
 	}
 
 	/**
@@ -158,8 +160,8 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 *
 	 * @return the goid 2 goterm
 	 */
-	public LinkedHashMap<String, String> getGoid2goterm() {
-		return goid2goterm;
+	public LinkedHashMap<String, String> gettermid2termname() {
+		return termid2termname;
 	}
 	
 	/**
@@ -169,6 +171,13 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 */
 	public void setMapofprobset2geneidused(Map<String, String> usedprobsetid2geneid){
 		this.mapofprobset2geneidused=usedprobsetid2geneid;
+		try {
+			this.mapofgeneidused2probset=MTUMapUtils.invertMap(mapofprobset2geneidused);
+		} catch (InstantiationException e) {
+			LogMessageCenter.getLogger().addCriticalErrorMessage(e);
+		} catch (IllegalAccessException e) {
+			LogMessageCenter.getLogger().addCriticalErrorMessage(e);
+		}
 	}
 	
 	/**
@@ -234,15 +243,15 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 */
 	public double getPercentageEnrichedBiclusters(){
 		if(pvaluetreshold!=null){
-			if(significantgottermsperbicluster.size()>0){
+			if(significanttermidsperbicluster.size()>0){
 				
 				int positiveterms=0;
-				for (int i = 0; i < significantgottermsperbicluster.size(); i++) {
-					if(significantgottermsperbicluster.get(i)!=0)
+				for (int i = 0; i < significanttermidsperbicluster.size(); i++) {
+					if(significanttermidsperbicluster.get(i)!=0)
 						positiveterms++;
 				}
 				
-				return (double)positiveterms/significantgottermsperbicluster.size()*100;
+				return (double)positiveterms/significanttermidsperbicluster.size()*100;
 			}
 			else
 				return 0;
@@ -260,11 +269,11 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 */
 	public void processResults(){
 		
-		gotermfrequencymap=ArrayListMultimap.create();
-		gotermpvaluemap=ArrayListMultimap.create();
-		goid2goterm=new LinkedHashMap<>();
-		goterm2associatedgenes=new LinkedHashMap<>();
-		significantgottermsperbicluster=new LinkedHashMap<>();
+		termidfrequencymap=ArrayListMultimap.create();
+		termidpvaluemap=ArrayListMultimap.create();
+		termid2termname=new LinkedHashMap<>();
+		termids2associatedgenes=new LinkedHashMap<>();
+		significanttermidsperbicluster=new LinkedHashMap<>();
 		
 		for (int i = 0; i < size(); i++) {
 			EnrichmentAnalysisResultsContainer result=get(i);
@@ -306,7 +315,7 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 		
 		filterAndProcessResults(tresholdvalue, toadjustedpvalues);
 		
-		for (Map.Entry<Integer, Integer> sig : significantgottermsperbicluster.entrySet()) {
+		for (Map.Entry<Integer, Integer> sig : significanttermidsperbicluster.entrySet()) {
 			if(sig.getValue()>0)
 				filteredlist.add(associatedbiclusterlist.get(sig.getKey()));
 		}
@@ -325,10 +334,13 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 		
 		EnrichedBiclusterList filteredlist=new EnrichedBiclusterList();
 		
-		for (Map.Entry<Integer, Integer> sig : significantgottermsperbicluster.entrySet()) {
+		for (Map.Entry<Integer, Integer> sig : significanttermidsperbicluster.entrySet()) {
 			if(sig.getValue()>0){
-				ArrayList<String> enrichedgenes=getEnrichedGeneList(goterm2associatedgenes.get(sig.getKey()));
+				//System.out.println(sig.getKey());
+				ArrayList<String> enrichedgenes=getEnrichedGeneList(termids2associatedgenes.get(sig.getKey()));
 			    ArrayList<String> conditions=associatedbiclusterlist.get(sig.getKey()).getConditionNames();
+			    System.out.println(enrichedgenes);
+			    //System.out.println(conditions);
 				EnrichedBiclusterResult res=new EnrichedBiclusterResult(associatedbiclusterlist.getAnalysedDataset(), enrichedgenes, conditions);
 				filteredlist.add(res);
 			}	
@@ -355,7 +367,13 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 		
 		for (String termid : maplist.keySet()) {
 			ArrayList<String> associated=maplist.get(termid);
-			res.addAll(associated);
+			if(mapofgeneidused2probset!=null) {
+				for (int i = 0; i < associated.size(); i++) {
+					res.add(mapofgeneidused2probset.get(associated.get(i)));
+				}
+			}
+			else
+				res.addAll(associated);
 		}
 		
 		return new ArrayList<>(res);
@@ -371,7 +389,7 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	private void collectEnrichementAnalysisInformation(EnrichmentAnalysisResultsContainer result, int currentbicluster){
 		
 		
-		LinkedHashMap<String, String> goterm2goname=result.getMapGOTermToGoName();
+		LinkedHashMap<String, String> goterm2goname=result.getMapTermIDToTermName();
 		LinkedHashMap<String, Double> pvalues=null;
 		
 		if(pvaluetreshold!=null){
@@ -385,18 +403,18 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 				goid=null;
 
 			if(goid!=null){
-				if(!goid2goterm.containsKey(goid))
-						goid2goterm.put(goid, goterm2goname.get(goid));
-				gotermfrequencymap.put(goid, currentbicluster);
+				if(!termid2termname.containsKey(goid))
+						termid2termname.put(goid, goterm2goname.get(goid));
+				termidfrequencymap.put(goid, currentbicluster);
 				
 				if(pvalues!=null)
-					gotermpvaluemap.put(goid, pvalues.get(goid));
+					termidpvaluemap.put(goid, pvalues.get(goid));
 				else
-					gotermpvaluemap.put(goid, result.getGOTermspvalues().get(goid));
+					termidpvaluemap.put(goid, result.getTermIDspvalues().get(goid));
 				
-				ArrayList<String> assocgenes=result.getGenesAssociatedToGoTerm(goid);
+				ArrayList<String> assocgenes=result.getGenesAssociatedToTermID(goid);
 				if(assocgenes!=null)
-					addAssociatedGenesToGotermInCluster(assocgenes, goid, currentbicluster);
+					addAssociatedGenesToTermidInCluster(assocgenes, goid, currentbicluster);
 			}
 		}
 	}
@@ -411,9 +429,9 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 		
 		ArrayList<String> enrichedgoterms=result.getTermsWithCutoff(pvaluetreshold, useadjustedpvalues);
 		if(enrichedgoterms.size()>0)
-			significantgottermsperbicluster.put(currentbicluster, enrichedgoterms.size());
+			significanttermidsperbicluster.put(currentbicluster, enrichedgoterms.size());
 		else
-			significantgottermsperbicluster.put(currentbicluster, 0);
+			significanttermidsperbicluster.put(currentbicluster, 0);
 		
 	}
 	
@@ -421,17 +439,17 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	 * Adds the associated genes to goterm in cluster.
 	 *
 	 * @param genes the genes
-	 * @param goid the goid
+	 * @param id the goid
 	 * @param clusterresult the clusterresult
 	 */
-	private void addAssociatedGenesToGotermInCluster(ArrayList<String> genes, String goid, int clusterresult){
-		if(goterm2associatedgenes.containsKey(clusterresult)){
-			goterm2associatedgenes.get(clusterresult).put(goid, genes);
+	private void addAssociatedGenesToTermidInCluster(ArrayList<String> genes, String id, int clusterresult){
+		if(termids2associatedgenes.containsKey(clusterresult)){
+			termids2associatedgenes.get(clusterresult).put(id, genes);
 		}
 		else{
 			LinkedHashMap<String,ArrayList<String>> genestogoid=new LinkedHashMap<>();
-			genestogoid.put(goid, genes);
-			goterm2associatedgenes.put(clusterresult, genestogoid);
+			genestogoid.put(id, genes);
+			termids2associatedgenes.put(clusterresult, genestogoid);
 		}
 	}
 	
@@ -480,7 +498,7 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 		for (int i = 0; i < size(); i++) {
 			
 			str.append("##############  Significant Enrichment analysis result of bicluster: "+(i+1)+" #######################\n");
-			str.append(get(i).getSignificantGoTermsReport(pvaluecutoff, useadustedpvalues));
+			str.append(get(i).getSignificantTermIDsReport(pvaluecutoff, useadustedpvalues));
 			str.append("\n\n");
 		}
 		
@@ -508,11 +526,11 @@ public class EnrichmentAnalysisResultList extends ArrayList<EnrichmentAnalysisRe
 	public EnrichmentAnalysisResultList getCloneWithoutExpressionDataAssociation() throws Exception {
 		
 		EnrichmentAnalysisResultList clone=new EnrichmentAnalysisResultList((Map<String, String>) MTUCollectionsUtils.deepCloneObject(mapofprobset2geneidused), 
-				(Multimap<String, Integer>) MTUCollectionsUtils.deepCloneObject(gotermfrequencymap), 
-				(Multimap<String, Double>) MTUCollectionsUtils.deepCloneObject(gotermpvaluemap),
-				(LinkedHashMap<Integer, LinkedHashMap<String, ArrayList<String>>>) MTUCollectionsUtils.deepCloneObject(goterm2associatedgenes), 
-				(LinkedHashMap<Integer, Integer>) MTUCollectionsUtils.deepCloneObject(significantgottermsperbicluster), 
-				(LinkedHashMap<String, String>) MTUCollectionsUtils.deepCloneObject(goid2goterm),
+				(Multimap<String, Integer>) MTUCollectionsUtils.deepCloneObject(termidfrequencymap), 
+				(Multimap<String, Double>) MTUCollectionsUtils.deepCloneObject(termidpvaluemap),
+				(LinkedHashMap<Integer, LinkedHashMap<String, ArrayList<String>>>) MTUCollectionsUtils.deepCloneObject(termids2associatedgenes), 
+				(LinkedHashMap<Integer, Integer>) MTUCollectionsUtils.deepCloneObject(significanttermidsperbicluster), 
+				(LinkedHashMap<String, String>) MTUCollectionsUtils.deepCloneObject(termid2termname),
 				pvaluetreshold,
 				useadjustedpvalues,
 				(HashSet<String>) MTUCollectionsUtils.deepCloneObject(unannotatedGeneNames),

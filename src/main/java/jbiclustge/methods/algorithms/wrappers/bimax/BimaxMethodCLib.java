@@ -21,23 +21,21 @@
 package jbiclustge.methods.algorithms.wrappers.bimax;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import jbiclustge.analysis.overlap.OverlapAnalyser;
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.IDiscretizationMethod;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.methods.BiMaxBinarizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.IDiscretizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.methods.BiMaxBinarizationMethod;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -289,7 +287,7 @@ public class BimaxMethodCLib extends AbstractBiclusteringAlgorithmCaller{
 	@Override
 	protected boolean runAlgorithm() throws Exception {
 		
-		Date starttime =Calendar.getInstance().getTime();
+		Instant start = Instant.now();
 		try {
 			int[][] data=expressionset.getBinarizedMatrix(binarizationmethod);
 			if(overlapthreshold==1.0){
@@ -301,9 +299,7 @@ public class BimaxMethodCLib extends AbstractBiclusteringAlgorithmCaller{
 			}
 				
 
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			
 		} catch (Exception e) {
 			LogMessageCenter.getLogger().addCriticalErrorMessage("Error executing "+getAlgorithmName()+": ", e);
@@ -431,12 +427,7 @@ public class BimaxMethodCLib extends AbstractBiclusteringAlgorithmCaller{
 	/* (non-Javadoc)
  * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
  */
-@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
 
-	
 	/**
 	 * Gets the biclusters genes.
 	 *

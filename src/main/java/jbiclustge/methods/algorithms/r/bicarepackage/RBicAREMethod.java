@@ -21,9 +21,8 @@
 package jbiclustge.methods.algorithms.r.bicarepackage;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -32,11 +31,10 @@ import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.r.RBiclustAlgorithmCaller;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -283,7 +281,7 @@ public class RBicAREMethod extends RBiclustAlgorithmCaller{
 		this.condinitprob=PropertiesUtilities.getDoublePropertyValueValidLimits(props, BICARE_INITCONDSPROB, 0.5, 0, false, 1, true, getClass());
 		this.residuethresh=PropertiesUtilities.getDoublePropertyValueValidLowerLimit(props, BICARE_RESIDUETHRESHOLD, 0.0, 0.0, true, getClass());
 		this.mingenesbic=PropertiesUtilities.getIntegerPropertyValueValidLowerLimit(props, BICARE_MINGENESBIC, 8, 2,true, this.getClass());
-		this.mingenesbic=PropertiesUtilities.getIntegerPropertyValueValidLowerLimit(props, BICARE_MINCONDSBIC, 6, 2,true, this.getClass());
+		this.mincondsbic=PropertiesUtilities.getIntegerPropertyValueValidLowerLimit(props, BICARE_MINCONDSBIC, 6, 2,true, this.getClass());
 		this.numberiter=PropertiesUtilities.getIntegerPropertyValueValidLowerLimit(props, BICARE_NITER, 500, 1,true, this.getClass());
 		
 	}
@@ -296,8 +294,9 @@ public class RBicAREMethod extends RBiclustAlgorithmCaller{
 		LogMessageCenter.getLogger().toClass(getClass()).addInfoMessage("Starting "+getAlgorithmName()+"(FLOC) biclustering method...please wait");
 		try {
 
-			loadExpressionMatrixInREnvironment();
-			Date starttime =Calendar.getInstance().getTime();
+			//loadExpressionMatrixInREnvironment();
+			loadLabeledExpressionMatrixInREnvironment();
+			Instant start = Instant.now();
 			if(residuethresh==0){
 				residuethresh=rsession.eval("residue("+inputmatrixname+")").asDouble();
 				residuethresh=residuethresh/10;
@@ -309,9 +308,7 @@ public class RBicAREMethod extends RBiclustAlgorithmCaller{
 				+ " pGene="+String.valueOf(genesinitprob)+", pSample="+String.valueOf(condinitprob)+", r="+String.valueOf(residuethresh)+", "
 						+ ""+String.valueOf(mingenesbic)+", "+mincondsbic+", "+String.valueOf(numberiter)+getExtraInformation()+")");
 		
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 
 			
 		} catch (Exception e) {
@@ -339,7 +336,7 @@ public class RBicAREMethod extends RBiclustAlgorithmCaller{
 	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#processResults()
 	 */
 	@Override
-	protected void processResults() {
+	protected void processResults() throws Exception {
 		
 		LogMessageCenter.getLogger().toClass(getClass()).addInfoMessage("Saving "+getAlgorithmName()+" results...please wait");
 
@@ -365,6 +362,7 @@ public class RBicAREMethod extends RBiclustAlgorithmCaller{
 		
 		} catch (Exception e) {
 			LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in processing the results of "+getAlgorithmName()+": ", e);
+		    throw e;
 		}
 		
 	}

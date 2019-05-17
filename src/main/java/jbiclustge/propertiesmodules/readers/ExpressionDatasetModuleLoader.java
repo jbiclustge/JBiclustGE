@@ -21,11 +21,12 @@
 package jbiclustge.propertiesmodules.readers;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Properties;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
 import jbiclustge.datatools.expressiondata.smiletools.ZeroValueImputation;
-import jbiclustge.propertiesmodules.PropertiesModules;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.propertiesmodules.PropertyModuleLoader;
 import pt.ornrocha.systemutils.OSystemUtils;
 import smile.imputation.AverageImputation;
@@ -86,23 +87,25 @@ public class ExpressionDatasetModuleLoader extends PropertyModuleLoader{
 	@Override
 	public void loadProperties() throws Exception {
 		
-		if(!props.containsKey(PropertiesModules.INPUTDATASETFILEPATH))
+		if(!props.containsKey(PropertyLabels.INPUTDATASETFILEPATH))
 			throw new IOException("Missing expression dataset file");
 		else{
 			
 			MissingValueImputation missvalmethod=null;
 			
-			if(props.getProperty(PropertiesModules.INPUTDATASETFILEPATH).isEmpty())
+			if(props.getProperty(PropertyLabels.INPUTDATASETFILEPATH).isEmpty())
 				throw new IOException("Missing expression dataset file");
 			else{
 				
-				String datasetfilepath=props.getProperty(PropertiesModules.INPUTDATASETFILEPATH);
+				String datasetfilepath=props.getProperty(PropertyLabels.INPUTDATASETFILEPATH);
 
 				datasetfilepath=OSystemUtils.validatePath(datasetfilepath);
 				
-				if(props.containsKey(PropertiesModules.MISSINGDATAIMPUTATIONMETHOD)){
+				System.out.println(datasetfilepath);
+				
+				if(props.containsKey(PropertyLabels.MISSINGDATAIMPUTATIONMETHOD)){
 					
-					String method=props.getProperty(PropertiesModules.MISSINGDATAIMPUTATIONMETHOD);
+					String method=props.getProperty(PropertyLabels.MISSINGDATAIMPUTATIONMETHOD);
 					
 					if(method!=null && !method.isEmpty()){
 						
@@ -110,8 +113,8 @@ public class ExpressionDatasetModuleLoader extends PropertyModuleLoader{
 						if(method.toLowerCase().equals("averageimputation"))
 							missvalmethod=new AverageImputation();
 						else if(method.toLowerCase().equals("kmeansimputation")){
-							if(props.containsKey(PropertiesModules.KMeansImputation)){
-								String kmeanparam=props.getProperty(PropertiesModules.KMeansImputation);
+							if(props.containsKey(PropertyLabels.KMeansImputation)){
+								String kmeanparam=props.getProperty(PropertyLabels.KMeansImputation);
 								if(kmeanparam!=null && !kmeanparam.isEmpty()){
 									String[] sp=kmeanparam.split(";");
 									if(sp.length==2){
@@ -133,8 +136,8 @@ public class ExpressionDatasetModuleLoader extends PropertyModuleLoader{
 								missvalmethod=new KMeansImputation(4,5);
 						}
 						else if(method.toLowerCase().equals("knnimputation")){
-							if(props.containsKey(PropertiesModules.KNNImputation)){
-								String knnparam=props.getProperty(PropertiesModules.KNNImputation);
+							if(props.containsKey(PropertyLabels.KNNImputation)){
+								String knnparam=props.getProperty(PropertyLabels.KNNImputation);
 								if(knnparam!=null && !knnparam.isEmpty()){
 									try {
 										int k=Integer.parseInt(knnparam);
@@ -150,8 +153,8 @@ public class ExpressionDatasetModuleLoader extends PropertyModuleLoader{
 								missvalmethod=new KNNImputation(5);
 						}
 						else if(method.toLowerCase().equals("llsimputation")){
-							if(props.containsKey(PropertiesModules.LLSImputation)){
-								String llsparam=props.getProperty(PropertiesModules.LLSImputation);
+							if(props.containsKey(PropertyLabels.LLSImputation)){
+								String llsparam=props.getProperty(PropertyLabels.LLSImputation);
 								if(llsparam!=null && !llsparam.isEmpty()){
 									try {
 										int k=Integer.parseInt(llsparam);
@@ -167,8 +170,8 @@ public class ExpressionDatasetModuleLoader extends PropertyModuleLoader{
 								missvalmethod=new LLSImputation(5);
 						}
 						else if(method.toLowerCase().equals("svdimputation")){
-							if(props.containsKey(PropertiesModules.SVDImputation)){
-								String svdparam=props.getProperty(PropertiesModules.SVDImputation);
+							if(props.containsKey(PropertyLabels.SVDImputation)){
+								String svdparam=props.getProperty(PropertyLabels.SVDImputation);
 								if(svdparam!=null && !svdparam.isEmpty()){
 									try {
 										int k=Integer.parseInt(svdparam);
@@ -212,6 +215,13 @@ public class ExpressionDatasetModuleLoader extends PropertyModuleLoader{
 	 */
 	public static ExpressionDatasetModuleLoader load(Properties props) throws Exception{
 		return new ExpressionDatasetModuleLoader(props);
+	}
+
+
+	@Override
+	public HashMap<String, Object> getMapOfProperties() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 

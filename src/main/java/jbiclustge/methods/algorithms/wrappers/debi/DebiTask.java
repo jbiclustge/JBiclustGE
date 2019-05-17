@@ -34,7 +34,7 @@ import jbiclustge.methods.algorithms.wrappers.components.RegulationPattern;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.CommandsProcessList;
+import jbiclustge.utils.props.CommandsProcessList;
 import pt.ornrocha.ioutils.readers.MTUReadUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.stringutils.ReusableInputStream;
@@ -305,7 +305,8 @@ public class DebiTask implements Callable<Pair<Boolean,BiclusterList>>{
 					}
 					
 					
-					BiclusterResult res=new BiclusterResult(expressiondata, bicgenes, bicconds);
+					//BiclusterResult res=new BiclusterResult(expressiondata, bicgenes, bicconds);
+					BiclusterResult res=new BiclusterResult(expressiondata,true, bicgenes, bicconds);
 					res.appendAdditionalInfo("Regulation Pattern", pattern.getName());
 					
 					if(auxinfo!=null){

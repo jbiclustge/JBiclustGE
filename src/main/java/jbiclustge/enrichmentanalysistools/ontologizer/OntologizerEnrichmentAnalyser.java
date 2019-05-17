@@ -20,7 +20,6 @@
  */
 package jbiclustge.enrichmentanalysistools.ontologizer;
 
-import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
 
-import jbiclustge.datatools.goannotation.components.GOAnnotationGAFList;
+import jbiclustge.annotation.goannotation.components.GOAnnotationGAFList;
 import jbiclustge.enrichmentanalysistools.common.EnrichmentAnalyserProcessor;
 import jbiclustge.enrichmentanalysistools.common.EnrichmentAnalysisResultList;
 import jbiclustge.enrichmentanalysistools.common.GSEAAnalyserType;
@@ -44,7 +43,7 @@ import jbiclustge.enrichmentanalysistools.ontologizer.components.OntologizerProc
 import jbiclustge.enrichmentanalysistools.ontologizer.components.OntologizerPropertiesContainer;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.JBiGePropertiesManager;
+import jbiclustge.utils.props.JBiGePropertiesManager;
 import ontologizer.OntologizerCore.Arguments;
 import ontologizer.calculation.AbstractGOTermProperties;
 import ontologizer.calculation.EnrichedGOTermsResult;
@@ -427,76 +426,86 @@ public class OntologizerEnrichmentAnalyser extends EnrichmentAnalyserProcessor{
 	 * Configure current annotation file.
 	 */
 	protected void configureCurrentAnnotationFile() {
-		if(annotationtype.equals(OntologizerAnnotationType.ALL) && gotermidstoignore==null)
+
+		String ext=FilenameUtils.getExtension(annotationFilePath);
+
+		if(ext.toLowerCase().equals("ids")) {
 			currentannotationfilepath=annotationFilePath;
-		else{
-			String savepath=FilenameUtils.getFullPath(annotationFilePath);
-			String namefile=FilenameUtils.getBaseName(annotationFilePath);
-			String ext=FilenameUtils.getExtension(annotationFilePath);
-			String newname=null;
-			String newfilepath=null;
-			if(annotationtype.equals(OntologizerAnnotationType.ALL) && gotermidstoignore!=null){
-				String excludedgoterms=null;
-				if(ext!=null && !ext.isEmpty())
-					newname=namefile+"_excludedgoterms."+ext;
-				else
-					newname=namefile+"_excludedgoterms";
-				newfilepath=FilenameUtils.concat(savepath, newname);
+		}
+		else {
 
-				try {
-					GOAnnotationGAFList filter=new GOAnnotationGAFList(annotationFilePath);
-					excludedgoterms=filter.getFilteredAnnotationByExcludeGOTermIds(gotermidstoignore.toArray(new String[gotermidstoignore.size()]));
-					MTUWriterUtils.writeStringWithFileChannel(excludedgoterms, newfilepath, 0);
-					currentannotationfilepath=newfilepath;
-				} catch (Exception e) {
-					LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in exclusion of GO terms from annotation file. ", e);
-					currentannotationfilepath=annotationFilePath;
-				}
-			}
+
+			if(annotationtype.equals(OntologizerAnnotationType.ALL) && gotermidstoignore==null)
+				currentannotationfilepath=annotationFilePath;
 			else{
-
-				if(ext!=null && !ext.isEmpty()){
-					if(gotermidstoignore!=null)
-						newname=namefile+"_"+annotationtype.getGOAspect().getGOType()+"_excludedgoterms."+ext;
+				String savepath=FilenameUtils.getFullPath(annotationFilePath);
+				String namefile=FilenameUtils.getBaseName(annotationFilePath);
+				//String ext=FilenameUtils.getExtension(annotationFilePath);
+				String newname=null;
+				String newfilepath=null;
+				if(annotationtype.equals(OntologizerAnnotationType.ALL) && gotermidstoignore!=null){
+					String excludedgoterms=null;
+					if(ext!=null && !ext.isEmpty())
+						newname=namefile+"_excludedgoterms."+ext;
 					else
-						newname=namefile+"_"+annotationtype.getGOAspect().getGOType()+"."+ext;	
-				}
-				else{
-					if(gotermidstoignore!=null)
-						newname=namefile+"_"+annotationtype.getGOAspect().getGOType()+"_excludedgoterms";
-					else
-						newname=namefile+"_"+annotationtype.getGOAspect().getGOType();
-				}
+						newname=namefile+"_excludedgoterms";
+					newfilepath=FilenameUtils.concat(savepath, newname);
 
-
-				newfilepath=FilenameUtils.concat(savepath, newname);
-
-				File f=new File(newfilepath);
-				if(!forceupdate && gotermidstoignore==null && f.exists())
-					currentannotationfilepath=newfilepath;
-				else if(gotermidstoignore!=null){
 					try {
-						GOAnnotationGAFList filterlist=new GOAnnotationGAFList(annotationFilePath);
-						String filteredexcludedgoterms=filterlist.getFilteredAnnotationByGOAspectExcludeGOTermIds(annotationtype.getGOAspect(), gotermidstoignore.toArray(new String[gotermidstoignore.size()]));
-						MTUWriterUtils.writeStringWithFileChannel(filteredexcludedgoterms, newfilepath, 0);	
+						GOAnnotationGAFList filter=new GOAnnotationGAFList(annotationFilePath);
+						excludedgoterms=filter.getFilteredAnnotationByExcludeGOTermIds(gotermidstoignore.toArray(new String[gotermidstoignore.size()]));
+						MTUWriterUtils.writeStringWithFileChannel(excludedgoterms, newfilepath, 0);
 						currentannotationfilepath=newfilepath;
 					} catch (Exception e) {
-						LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in filtering and exclude GO term ids from annotation file. ", e);
+						LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in exclusion of GO terms from annotation file. ", e);
 						currentannotationfilepath=annotationFilePath;
 					}
 				}
 				else{
-					try {
-						GOAnnotationGAFList filterlist=new GOAnnotationGAFList(annotationFilePath);
-						String filteredgoterms=filterlist.getFilteredAnnotationByGOAspectNoExclusions(annotationtype.getGOAspect());
-						MTUWriterUtils.writeStringWithFileChannel(filteredgoterms, newfilepath, 0);
-						currentannotationfilepath=newfilepath;
 
-					} catch (Exception e) {
-						LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in filtering GO terms from annotation file. ", e);
-						currentannotationfilepath=annotationFilePath;
+					if(ext!=null && !ext.isEmpty()){
+						if(gotermidstoignore!=null)
+							newname=namefile+"_"+annotationtype.getGOAspect().getGOType()+"_excludedgoterms."+ext;
+						else
+							newname=namefile+"_"+annotationtype.getGOAspect().getGOType()+"."+ext;	
+					}
+					else{
+						if(gotermidstoignore!=null)
+							newname=namefile+"_"+annotationtype.getGOAspect().getGOType()+"_excludedgoterms";
+						else
+							newname=namefile+"_"+annotationtype.getGOAspect().getGOType();
 					}
 
+
+					newfilepath=FilenameUtils.concat(savepath, newname);
+
+					File f=new File(newfilepath);
+					if(!forceupdate && gotermidstoignore==null && f.exists())
+						currentannotationfilepath=newfilepath;
+					else if(gotermidstoignore!=null){
+						try {
+							GOAnnotationGAFList filterlist=new GOAnnotationGAFList(annotationFilePath);
+							String filteredexcludedgoterms=filterlist.getFilteredAnnotationByGOAspectExcludeGOTermIds(annotationtype.getGOAspect(), gotermidstoignore.toArray(new String[gotermidstoignore.size()]));
+							MTUWriterUtils.writeStringWithFileChannel(filteredexcludedgoterms, newfilepath, 0);	
+							currentannotationfilepath=newfilepath;
+						} catch (Exception e) {
+							LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in filtering and exclude GO term ids from annotation file. ", e);
+							currentannotationfilepath=annotationFilePath;
+						}
+					}
+					else{
+						try {
+							GOAnnotationGAFList filterlist=new GOAnnotationGAFList(annotationFilePath);
+							String filteredgoterms=filterlist.getFilteredAnnotationByGOAspectNoExclusions(annotationtype.getGOAspect());
+							MTUWriterUtils.writeStringWithFileChannel(filteredgoterms, newfilepath, 0);
+							currentannotationfilepath=newfilepath;
+
+						} catch (Exception e) {
+							LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in filtering GO terms from annotation file. ", e);
+							currentannotationfilepath=annotationFilePath;
+						}
+
+					}
 				}
 			}
 		}

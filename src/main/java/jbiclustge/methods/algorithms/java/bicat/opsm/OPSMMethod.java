@@ -21,8 +21,7 @@
 package jbiclustge.methods.algorithms.java.bicat.opsm;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Properties;
@@ -36,9 +35,8 @@ import jbiclustge.methods.algorithms.java.bicat.opsm.components.OPSMDataset;
 import jbiclustge.methods.algorithms.wrappers.components.KillerProcess;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 public class OPSMMethod extends AbstractBiclusteringAlgorithmCaller{
 	
@@ -89,10 +87,7 @@ public class OPSMMethod extends AbstractBiclusteringAlgorithmCaller{
 		return this;
 	}
 	
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+	
 
 	@Override
 	public String getAlgorithmName() {
@@ -102,18 +97,14 @@ public class OPSMMethod extends AbstractBiclusteringAlgorithmCaller{
 	@Override
 	protected synchronized boolean runAlgorithm() {
 		
-		Date starttime =Calendar.getInstance().getTime();
+		Instant start = Instant.now();
 		final BendorReloadedAlgorithm opsm = new BendorReloadedAlgorithm();
 		OPSMDataset indata = new OPSMDataset(expressionset.getexpressionDataMatrixFloatValues()); 
 		outputBiclusters=opsm.run(indata, numberbestpartialmodels,killer);
 		
 		if(!killer.isToKill()) {
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
-		
-		//outputBiclusters=opsmrun.getOutputBiclusters();
-		
+			saveElapsedTime(start);
+
 			if(outputBiclusters!=null && outputBiclusters.size()>0)
 				return true;
 		}

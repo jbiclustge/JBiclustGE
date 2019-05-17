@@ -28,7 +28,8 @@ import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import jbiclustge.utils.properties.JBiGePropertiesManager;
+import jbiclustge.utils.props.JBiGePropertiesManager;
+import pt.ornrocha.fileutils.MTUDirUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.stringutils.MTUStringUtils;
 import pt.ornrocha.systemutils.OSystemUtils;
@@ -56,6 +57,8 @@ public class SystemFolderTools {
 	
 	/** The Constant JBICLUSTUSERTEMPFOLDER. */
 	public static final String JBICLUSTUSERTEMPFOLDER="jbicge_temp_files";
+	
+	public static final String JBICLUSTLOGDIR="jbiclustge_logs";
 	
 	/**
 	 * Gets the current dir.
@@ -91,6 +94,12 @@ public class SystemFolderTools {
 		return folderpath.getAbsolutePath();
 	}
 	
+	
+	public static String getLogFolder() {
+		String folderpath=FilenameUtils.concat(getCurrentDir(), JBICLUSTLOGDIR);
+		MTUDirUtils.checkDirectory(folderpath);
+		return folderpath;
+	}
 
 	
 	/**
@@ -271,6 +280,11 @@ public class SystemFolderTools {
 		if(path!=null && path.isEmpty())
 			path=null;
 		return path;
+	}
+	
+	
+	public static String getOrgDatabaseTmpFilepath() {
+		return FilenameUtils.concat(SystemFolderTools.getCurrentDir(), "properties"+File.separator+"saved_org_databases.txt");
 	}
 	
 	/**

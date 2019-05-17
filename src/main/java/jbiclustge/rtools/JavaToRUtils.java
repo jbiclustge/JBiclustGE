@@ -22,7 +22,8 @@ package jbiclustge.rtools;
 
 import org.javatuples.Pair;
 
-import jbiclustge.utils.properties.JBiGePropertiesManager;
+import jbiclustge.propertiesmodules.PropertyLabels;
+import jbiclustge.utils.props.JBiGePropertiesManager;
 import pt.ornrocha.rtools.connectors.RConnector;
 
 // TODO: Auto-generated Javadoc
@@ -54,7 +55,7 @@ public class JavaToRUtils {
 	public static boolean useMultipleRsession(){
 		String sessiontype=(String) JBiGePropertiesManager.getManager().getKeyValue("rserve_type_session");
 		if(sessiontype!=null && !sessiontype.isEmpty()){
-			if(sessiontype.toLowerCase().equals("multiple"))
+			if(sessiontype.toLowerCase().equals(PropertyLabels.RCONCURRENTRUNTYPE))
 				return true;
 		}
 		return false;

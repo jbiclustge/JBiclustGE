@@ -27,7 +27,7 @@ import java.util.Properties;
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 
 // TODO: Auto-generated Javadoc

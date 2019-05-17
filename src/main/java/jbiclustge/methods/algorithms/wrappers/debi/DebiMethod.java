@@ -21,9 +21,8 @@
 package jbiclustge.methods.algorithms.wrappers.debi;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 import java.util.UUID;
@@ -32,17 +31,16 @@ import org.apache.commons.io.FilenameUtils;
 import org.javatuples.Pair;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.IDiscretizationMethod;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.methods.BiMaxBinarizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.IDiscretizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.methods.BiMaxBinarizationMethod;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.wrappers.IBiclustWrapper;
 import jbiclustge.methods.algorithms.wrappers.components.RegulationPattern;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.threadutils.MTUMultiThreadCallableExecutor;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -315,7 +313,7 @@ public class DebiMethod extends AbstractBiclusteringAlgorithmCaller implements I
 	protected boolean runAlgorithm() throws Exception {
 		boolean valid=false;
 		configurePaths();
-		Date starttime =Calendar.getInstance().getTime();
+		Instant start = Instant.now();
 		tasks=new ArrayList<>();
 		if(pattern.equals(RegulationPattern.BOTH)){
 			
@@ -330,9 +328,7 @@ public class DebiMethod extends AbstractBiclusteringAlgorithmCaller implements I
 				listofbiclusters.addAll(results.get(0).getValue1());
 				listofbiclusters.addAll(results.get(1).getValue1());
 			}
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			return valid;	
 		}
 		else{
@@ -344,9 +340,7 @@ public class DebiMethod extends AbstractBiclusteringAlgorithmCaller implements I
 			if(valid)
 				listofbiclusters=result.getValue1();
 			
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			return valid;
 		}
 
@@ -361,13 +355,7 @@ public class DebiMethod extends AbstractBiclusteringAlgorithmCaller implements I
 		
 	}
 
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 
 	/* (non-Javadoc)
 	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getTemporaryWorkingDirectory()
@@ -388,9 +376,11 @@ public class DebiMethod extends AbstractBiclusteringAlgorithmCaller implements I
     	datamatrixfilepath=FilenameUtils.concat(workingpath, UUID.randomUUID().toString()+".txt");
     	
     	if(binarizationmethod!=null)
-			expressionset.writeExpressionDatasetToFile(datamatrixfilepath, binarizationmethod);
+    		expressionset.writeExpressionDatasetLabeledFormatToFile(datamatrixfilepath, binarizationmethod);
+			//expressionset.writeExpressionDatasetToFile(datamatrixfilepath, binarizationmethod);
 		else
-			expressionset.writeExpressionDatasetToFile(datamatrixfilepath);
+			expressionset.writeExpressionDatasetLabeledFormatToFile(datamatrixfilepath);
+			//expressionset.writeExpressionDatasetToFile(datamatrixfilepath);
     }
 
 	/* (non-Javadoc)

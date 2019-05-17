@@ -21,27 +21,25 @@
 package jbiclustge.methods.algorithms.r.biclustpackage;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.apache.commons.lang3.ArrayUtils;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.IDiscretizationMethod;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.methods.BiMaxBinarizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.IDiscretizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.methods.BiMaxBinarizationMethod;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.methods.algorithms.r.RBiclustAlgorithmCaller;
 import jbiclustge.rtools.JavaToRUtils;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.arrays.MTUMatrixUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -438,7 +436,8 @@ public class RXMOTIFSMethod extends RBiclustAlgorithmCaller{
 				rsession.silentlyVoidEval("disc_"+inputmatrixname+" <- "+inputmatrixname+"");
 			}
 			else
-				loadExpressionMatrixInREnvironment();
+				loadLabeledExpressionMatrixInREnvironment();
+				//loadExpressionMatrixInREnvironment();
 			
 			if(externalbinmethod==null){
 				if(disclevels!=10 || discquantile)
@@ -448,13 +447,11 @@ public class RXMOTIFSMethod extends RBiclustAlgorithmCaller{
 				}
 			}
 			
-			Date starttime =Calendar.getInstance().getTime();
+			Instant start = Instant.now();
 			
 			rsession.silentlyEval(getResultOutputName()+" <- biclust("+"disc_"+inputmatrixname+", method=BCXmotifs(), number="+String.valueOf(nbics)+", alpha="+String.valueOf(scalefactor)+", nd="+String.valueOf(nrepetitions)+", ns="+String.valueOf(ncolumns)+", sd="+String.valueOf(sdrepetitions)+")",true);
 			
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
 			
 			writeBiclusterResultsToFileWithOriginalAlgorithmMethod();
 			

@@ -20,6 +20,7 @@
  */
 package jbiclustge.propertiesmodules;
 
+import java.util.HashMap;
 import java.util.Properties;
 
 // TODO: Auto-generated Javadoc
@@ -49,5 +50,12 @@ public abstract class PropertyModuleLoader {
 	 * @throws Exception the exception
 	 */
 	public abstract void loadProperties() throws Exception;
+	public abstract HashMap<String, Object> getMapOfProperties();
+	
+	public void addPropertiesToMapping(HashMap<String, Object> map) {
+		if(getMapOfProperties()!=null) {
+			map.putAll(getMapOfProperties());
+		}
+	}
 
 }

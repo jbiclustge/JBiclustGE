@@ -21,9 +21,8 @@
 package jbiclustge.methods.algorithms.r.biclic;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 import java.util.UUID;
@@ -37,11 +36,10 @@ import jbiclustge.methods.algorithms.r.RBiclustAlgorithmCaller;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -255,15 +253,14 @@ public class RBiclicMethod extends RBiclustAlgorithmCaller{
 
 		try {
 			
-			Date starttime =Calendar.getInstance().getTime();
+			Instant start = Instant.now();
 			
 			rsession.silentlyEval(getResultOutputName()+"<- BICLIC(\""+datafilepath+"\", "+String.valueOf(corstand)+", "+String.valueOf(minrow)+", "+String.valueOf(mincol)+", "+String.valueOf(overlaplevel)+")");
 			
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+			saveElapsedTime(start);
+			
 		} catch (Exception e) {
-			LogMessageCenter.getLogger().addCriticalErrorMessage("Error in execution of "+getAlgorithmName()+": ", e);
+			LogMessageCenter.getLogger().addCriticalErrorMessage("Error in executing "+getAlgorithmName()+": ", e);
 			return false;
 		}
 		
@@ -279,7 +276,8 @@ public class RBiclicMethod extends RBiclustAlgorithmCaller{
 	private void configureInputData() throws IOException{
 		tempfolder=SystemFolderTools.createRandomTemporaryProcessFolderWithNamePrefix("BICLIC");
 		datafilepath=FilenameUtils.concat(tempfolder, UUID.randomUUID().toString()+".txt");
-		expressionset.writeExpressionDatasetToFile(datafilepath);
+		//expressionset.writeExpressionDatasetToFile(datafilepath);
+		expressionset.writeExpressionDatasetLabeledFormatToFile(datafilepath);
 		
 	}
 	
@@ -296,25 +294,19 @@ public class RBiclicMethod extends RBiclustAlgorithmCaller{
 		try {
 			totalres=rsession.eval("length(merged_rows)").asInteger();
 		} catch (Exception e) {
-			LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in getting the number of calculated biclusters in "+getAlgorithmName(), e);
+			LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error in getting the number of calculated biclusters by "+getAlgorithmName(), e);
+			throw e;
+			
 		}
 		
 		if(totalres>0){
-			//System.out.println(totalres);
-			//RList gene=rsession.eval("merged_rows").asList();
-			
-			//REXP elm=(REXP) gene.get(0);
-			//System.out.println(elm.getClass());
+	
 			
 			for (int i = 0; i < totalres; i++) {
 				
 				double[] geneindexes=rsession.eval("merged_rows[["+String.valueOf(i+1)+"]]").asDoubles();
 				double[] condindexes=rsession.eval("merged_cols[["+String.valueOf(i+1)+"]]").asDoubles();
 				addBiclusterResult(geneindexes, condindexes);
-				/*System.out.println((i+1)+"\n");
-				MTUPrintUtils.printArrayofDoubles(geneindexes);
-				MTUPrintUtils.printArrayofDoubles(condindexes);
-				System.out.println("\n\n");*/
 			}
 			
 		}

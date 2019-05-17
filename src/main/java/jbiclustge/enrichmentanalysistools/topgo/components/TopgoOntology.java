@@ -20,7 +20,7 @@
  */
 package jbiclustge.enrichmentanalysistools.topgo.components;
 
-import jbiclustge.datatools.goannotation.components.GOAspect;
+import jbiclustge.annotation.goannotation.components.GOAspect;
 
 // TODO: Auto-generated Javadoc
 /**

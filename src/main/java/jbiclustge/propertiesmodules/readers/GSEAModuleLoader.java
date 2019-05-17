@@ -18,16 +18,20 @@
 package jbiclustge.propertiesmodules.readers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Properties;
 
+import jbiclustge.enrichmentanalysistools.clusterprofile.ClusterProfilerGOEnrichmentAnalyser;
+import jbiclustge.enrichmentanalysistools.clusterprofile.ClusterProfilerKeggModuleEnrichmentAnalyser;
+import jbiclustge.enrichmentanalysistools.clusterprofile.ClusterProfilerKeggPathwayEnrichmentAnalyser;
 import jbiclustge.enrichmentanalysistools.common.EnrichmentAnalyserProcessor;
 import jbiclustge.enrichmentanalysistools.ontologizer.OntologizerEnrichmentAnalyser;
 import jbiclustge.enrichmentanalysistools.topgo.TopGOEnrichmentAnalyser;
-import jbiclustge.propertiesmodules.PropertiesModules;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.propertiesmodules.PropertyModuleLoader;
 import jbiclustge.propertiesmodules.components.GSEAInfoContainer;
-import jbiclustge.utils.properties.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
+import pt.ornrocha.propertyutils.PropertiesUtilities;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -60,29 +64,42 @@ public class GSEAModuleLoader extends PropertyModuleLoader{
 	@Override
 	public void loadProperties() throws Exception {
 		
-		if(props.containsKey(PropertiesModules.GSEAPROCESSOR)){
-			String processor=props.getProperty(PropertiesModules.GSEAPROCESSOR);
+		if(PropertiesUtilities.isValidProperty(props, PropertyLabels.GSEAPROCESSOR)){
 			
-			if(processor!=null && !processor.isEmpty() && (processor.toLowerCase().equals("ontologizer") || processor.toLowerCase().equals("topgo"))){
+			String processor=props.getProperty(PropertyLabels.GSEAPROCESSOR);
+			
+			if(processor.toLowerCase().equals(PropertyLabels.ONTOLOGIZER) || 
+					processor.toLowerCase().equals(PropertyLabels.TOPGO)  ||
+					processor.toLowerCase().equals(PropertyLabels.CLUSTERPROFILERKEGG) ||
+					processor.toLowerCase().equals(PropertyLabels.CLUSTERPROFILERGO) ||
+					processor.toLowerCase().equals(PropertyLabels.CLUSTERPROFILERKEGGMODULE)){
 				
 				Properties processorprops=null;
 				
-				if(props.containsKey(PropertiesModules.GSEACONFIGURATIONFILE) && !props.getProperty(PropertiesModules.GSEACONFIGURATIONFILE).isEmpty())
-				      processorprops=AlgorithmProperties.loadProperties(props.getProperty(PropertiesModules.GSEACONFIGURATIONFILE));
+				/*if(props.containsKey(PropertyLabels.GSEACONFIGURATIONFILE) && !props.getProperty(PropertyLabels.GSEACONFIGURATIONFILE).isEmpty()) {*/
+				if(PropertiesUtilities.isValidProperty(props, PropertyLabels.GSEACONFIGURATIONFILE)) {
+					  //System.out.println(props.getProperty(PropertyLabels.GSEACONFIGURATIONFILE));
+					processorprops=PropertiesUtilities.loadFileProperties(props.getProperty(PropertyLabels.GSEACONFIGURATIONFILE));
+				}
 				
-				
-				if(processor.toLowerCase().equals("ontologizer"))
+
+				if(processor.toLowerCase().equals(PropertyLabels.ONTOLOGIZER))
 					gseaprocessor=new OntologizerEnrichmentAnalyser();
+				else if(processor.toLowerCase().equals(PropertyLabels.CLUSTERPROFILERKEGG))
+					gseaprocessor=new ClusterProfilerKeggPathwayEnrichmentAnalyser();
+				else if(processor.toLowerCase().equals(PropertyLabels.CLUSTERPROFILERKEGGMODULE))
+					gseaprocessor= new ClusterProfilerKeggModuleEnrichmentAnalyser();
+				else if(processor.toLowerCase().equals(PropertyLabels.CLUSTERPROFILERGO))
+					gseaprocessor= new ClusterProfilerGOEnrichmentAnalyser();
 				else
 					gseaprocessor=new TopGOEnrichmentAnalyser();
 				
 				if(processorprops!=null)
 					gseaprocessor.setProperties(processorprops);
 				
-				
-				if(props.containsKey(PropertiesModules.GSEAOUTPVALUES)&& !props.getProperty(PropertiesModules.GSEAOUTPVALUES).isEmpty()){
-					
-					String pvaluesstr=props.getProperty(PropertiesModules.GSEAOUTPVALUES);
+				if(PropertiesUtilities.isValidProperty(props, PropertyLabels.GSEAOUTPVALUES)) {
+
+					String pvaluesstr=props.getProperty(PropertyLabels.GSEAOUTPVALUES);
 					
 					String[] tmpval=pvaluesstr.split(";");
 					
@@ -109,14 +126,13 @@ public class GSEAModuleLoader extends PropertyModuleLoader{
 					pvalues.add(0.05);
 				}
 				
-				if(props.containsKey(PropertiesModules.GSEAUSEADJUSTEDPVALUES)&& !props.getProperty(PropertiesModules.GSEAUSEADJUSTEDPVALUES).isEmpty()){
-					if(props.getProperty(PropertiesModules.GSEAUSEADJUSTEDPVALUES).toLowerCase().equals("true"))
-						useadjustedpvalues=true;
+				if(PropertiesUtilities.isValidProperty(props,PropertyLabels.GSEAUSEADJUSTEDPVALUES)) {
+					useadjustedpvalues=PropertiesUtilities.getBooleanPropertyValue(props, PropertyLabels.GSEAUSEADJUSTEDPVALUES, false, getClass());
 				}
 				
 			}
 			else
-				LogMessageCenter.getLogger().addCriticalErrorMessage("Undefined processor for the gene enrichment analysis, only ontologizer or topgo are accepted!!");
+				LogMessageCenter.getLogger().addCriticalErrorMessage("Undefined processor for the gene enrichment analysis, please choose one of these:"+PropertyLabels.ONTOLOGIZER+", "+PropertyLabels.TOPGO+", "+PropertyLabels.CLUSTERPROFILERKEGG+" are accepted!!");
 		}
 		
 	}
@@ -169,6 +185,12 @@ public class GSEAModuleLoader extends PropertyModuleLoader{
 		GSEAModuleLoader loader=new GSEAModuleLoader(props);
 		loader.loadProperties();
 		return loader;
+	}
+
+	@Override
+	public HashMap<String, Object> getMapOfProperties() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 

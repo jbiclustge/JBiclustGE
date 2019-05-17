@@ -22,6 +22,8 @@ import java.beans.PropertyChangeSupport;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.Properties;
@@ -30,9 +32,10 @@ import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
 import jbiclustge.methods.IBiclusterAlgorithm;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
+import pt.ornrocha.timeutils.MTUTimeUtils;
 import smile.imputation.MissingValueImputationException;
 
 // TODO: Auto-generated Javadoc
@@ -95,7 +98,7 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
 	 *
 	 * @return the running time
 	 */
-	protected abstract String getRunningTime();
+	//protected abstract String getRunningTime();
 	
 	/**
 	 * Gets the report running parameters.
@@ -121,6 +124,7 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
 	public static String FIREBICLUSTERINGPROPERTYCHANGETASKSTATUS="FIREBICLUSTERINGPROPERTYCHANGETASKSTATUS";
 	public static String FIREBICLUSTERINGPROPERTYCHANGESUBTASKSTATUS="FIREBICLUSTERINGPROPERTYCHANGESUBTASKSTATUS";
 	public static String FIREPROPERTYALGORITHMCHANGENAME="FIREPROPERTYALGORITHMCHANGENAME";
+	public static String FIREPROPERTYCRITICALERROR="FIREPROPERTYCRITICALERROR";
 	
 	/**
 	 * Instantiates a new abstract biclustering algorithm caller.
@@ -200,8 +204,13 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
 	 *
 	 * @return the run time
 	 */
-	public String getRunTime(){
+	/*public String getRunTime(){
 		return getRunningTime();
+	}*/
+	
+	//@Override
+	public String getRunTime(){
+		return runningtime;
 	}
 	
 	/* (non-Javadoc)
@@ -211,7 +220,7 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
 		if(listofbiclusters!=null){
 			listofbiclusters.setUsedmethod(getAlgorithmName());
 			listofbiclusters.setAnalysedDataset(expressionset);
-			listofbiclusters.setMethodRunningTime(getRunningTime());
+			listofbiclusters.setMethodRunningTime(getRunTime());
 			if(getReportRunningParameters()!=null)
 				listofbiclusters.setMethodRunningParameters(getReportRunningParameters());
 		}
@@ -255,6 +264,10 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
     	else
     		LogMessageCenter.getLogger().toClass(getClass()).addWarnMessage("This method do not supports to define the number of biclusters to be found");
     }
+    
+    public void reset() {
+    	this.listofbiclusters=null;
+    }
 	
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
@@ -264,8 +277,9 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
     	try {
     		changesupportlistener.firePropertyChange(FIREPROPERTYALGORITHMCHANGENAME, null, getAlgorithmName());
 
-    		if(algorithmproperties!=null)
+    		if(algorithmproperties!=null) {
     			setAlgorithmProperties(algorithmproperties);
+    		}
     		if(expressionset!=null){
 
     			LogMessageCenter.getLogger().toClass(getClass()).addInfoMessage("Running "+ getAlgorithmName()+" method, this may take a while, please wait...");
@@ -286,6 +300,7 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
     					}
     				} catch (Exception e){
     					LogMessageCenter.getLogger().addCriticalErrorMessage("Error in processing of "+ getAlgorithmName()+" results: ", e);
+    					changesupportlistener.firePropertyChange(FIREPROPERTYCRITICALERROR, null, "Error in processing of "+ getAlgorithmName()+" results: "+e.getMessage());
     				}
     			}
     			if(successfully) {
@@ -297,7 +312,8 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
     			throw new IOException("Null input for Expression data, please set the  gene expression data to be analysed, using one of the following formats: "
     					+ "Text file format for expression dataset (.txt, .csv),  Stanford cDNA file format (.pcl), Gene Cluster Text file format (.gct) or ExpRESsion (with P and A calls) file format (.res)\n");
     	} catch (Exception e){
-    		LogMessageCenter.getLogger().addCriticalErrorMessage("Error running "+getAlgorithmName()+" :", e);
+    		LogMessageCenter.getLogger().addCriticalErrorMessage("An error was raised when running "+getAlgorithmName()+": ", e);
+    		changesupportlistener.firePropertyChange(FIREPROPERTYCRITICALERROR, null, "An error was raised when running "+getAlgorithmName()+": "+e.getMessage());
     	}
     	finally {
     		if(getTemporaryWorkingDirectory()!=null)
@@ -305,6 +321,13 @@ public abstract class AbstractBiclusteringAlgorithmCaller implements IBiclusterA
     	}
     }
 	
+    
+    protected void saveElapsedTime(Instant start) {
+    	Instant finish = Instant.now();
+		long runtime = Duration.between(start, finish).toMillis();
+		runningtime=MTUTimeUtils.getTimeElapsed(runtime);
+    }
+    
 	/**
 	 * Gets the date signature.
 	 *

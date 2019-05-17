@@ -24,24 +24,24 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Properties;
 
+import org.apache.commons.io.FilenameUtils;
 import org.javatuples.Pair;
 import org.math.R.Rsession;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.Rserve.RserveException;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.enrichmentanalysistools.common.EnrichmentAnalyserProcessor;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.rtools.JavaToRUtils;
+import jbiclustge.utils.osystem.JBiclustGESetupManager;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.JBiGePropertiesManager;
-import jbiclustge.utils.properties.JBiclustGEPropertiesInitializer;
-import jrplot.rbinders.functioncallers.AbstractRFunctionCallerSingleDataset;
+import jbiclustge.utils.props.JBiGePropertiesManager;
+import pt.ornrocha.fileutils.MTUFileUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.rtools.connectors.RConnector;
 import pt.ornrocha.rtools.installutils.RInstallTools;
@@ -151,13 +151,7 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 		return label;
 	}
 	
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 	
 	/**
 	 * Gets the r session.
@@ -198,10 +192,11 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 	 * Inits the rsession.
 	 */
 	protected void initRsession(){
+		
 		if(rsession==null){
 			Pair<String, String> rserveparam=JavaToRUtils.getRServeParameters();
 			
-			String Ruserlib=(String) JBiGePropertiesManager.getManager().getKeyValue(JBiclustGEPropertiesInitializer.RUSERLIBPATH);
+			String Ruserlib=(String) JBiGePropertiesManager.getManager().getKeyValue(PropertyLabels.RUSERLIBPATH);
 			
 			
 			ismultisession=JavaToRUtils.useMultipleRsession();
@@ -232,9 +227,12 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 	public synchronized void run() {
 	      try{
 		    
-			String Rpath=RInstallTools.getSystemR_HOME();
+			String Rpath=RInstallTools.getSystemR_PATH();
+			
 			LogMessageCenter.getLogger().addTraceMessage("R executable path: "+Rpath);
-			if(Rpath!=null && !Rpath.isEmpty()){	
+			
+			if(Rpath!=null && !Rpath.isEmpty() && !Rpath.equals(RInstallTools.NONE_R_HOME)){	
+				
 				try{
 					
 					initRsession();
@@ -263,7 +261,6 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 							
 							@Override
 							public void run() {
-								System.out.println("ORDER STOP:::::::::::::::::");
 								rsession.end();
 								
 							}
@@ -275,25 +272,21 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 						boolean successfully=runAlgorithm();
 						
 						
-		   
-						//long endTime = System.currentTimeMillis();
-						//runningtime=MTUTimeUtils.getTimeElapsed(endTime-startTime);
 						if(successfully){
 							changesupportlistener.firePropertyChange(FIREBICLUSTERINGPROPERTYCHANGESUBTASKSTATUS, null, "Processing Biclusters...");
 							LogMessageCenter.getLogger().toClass(getClass()).addInfoMessage("Processing results of "+ getAlgorithmName()+" method..."); 
 							try {
 								processResults();
 							} catch (Exception e) {
-								LogMessageCenter.getLogger().addCriticalErrorMessage("Error in processing of "+ getAlgorithmName()+" results: ", e);
-						
+								LogMessageCenter.getLogger().addCriticalErrorMessage("Error in processing the results of "+ getAlgorithmName()+" algorithm: ", e);
 							}
 							LogMessageCenter.getLogger().toClass(getClass()).addInfoMessage("Results of "+ getAlgorithmName()+" were successfully processed");
-		      
 						}
 					}
 				}
 				catch (Exception e){
 					LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("Error: ", e);
+					changesupportlistener.firePropertyChange(FIREPROPERTYCRITICALERROR, null, "This execution raised the following error:"+e.getMessage());
 				}
 		
 				if(removeRInputObjects()!=null && removeRInputObjects().length>0){
@@ -327,11 +320,11 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 		ArrayList<RPackageInfo> libs=requiredLibraries();
 		if(libs!=null){
 			//String userRlibs=JavaToRUtils.checkUserRLibsPath(getRSession());
-			String userRlibs=(String) JBiGePropertiesManager.getManager().getKeyValue(JBiclustGEPropertiesInitializer.RUSERLIBPATH);
+			String userRlibs=(String) JBiGePropertiesManager.getManager().getKeyValue(PropertyLabels.RUSERLIBPATH);
 			if(userRlibs!=null)
-				RConnector.loadRequiredLibraries(rsession, libs, userRlibs);
+				RConnector.loadRequiredLibraries(rsession, libs, userRlibs, JBiclustGESetupManager.getShellFeatures());
 			else
-				RConnector.loadRequiredLibraries(rsession,libs);
+				RConnector.loadRequiredLibraries(rsession,libs,JBiclustGESetupManager.getShellFeatures());
 		}
 	}
 	
@@ -430,6 +423,46 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 		
 	}
 	
+	
+	/**
+	 * Load expression matrix in R environment.
+	 */
+	protected void loadLabeledExpressionMatrixInREnvironment(){
+
+		   ArrayList<String> s=new ArrayList<>();
+		   
+		   for (int i = 0; i < expressionset.getGeneids().length; i++) {
+			    String d=expressionset.getGeneids()[i];
+			    if(s.contains(d))
+			    	LogMessageCenter.getLogger().addInfoMessage("DUPLICATE: "+d);
+			    	//System.out.println("DUPLICATE: "+d);
+			    else
+			    	s.add(d);
+		      }
+		   
+		   
+			rsession.set(inputmatrixname, expressionset.getexpressionDataMatrix());
+			rsession.set((inputmatrixname+"_rownames"), expressionset.getLabeledGeneids());
+			rsession.set((inputmatrixname+"_colnames"), expressionset.getLabeledConditionids());
+			rsession.silentlyEval("rownames("+inputmatrixname+")="+(inputmatrixname+"_rownames"));
+			rsession.silentlyEval("colnames("+inputmatrixname+")="+(inputmatrixname+"_colnames"));
+		
+	}
+	
+	protected void loadExpressionMatrixInREnvironmentByFile(){
+		
+		String tempdatasetfile=FilenameUtils.concat(SystemFolderTools.getMainFolderTemporaryProcesses(), MTUStringUtils.shortUUID()+".csv");
+		try {
+			expressionset.writeExpressionDatasetToFile(tempdatasetfile, "\t");
+			rsession.silentlyEval(inputmatrixname+" <- read.csv(\""+tempdatasetfile+"\", sep=\"\t\",header = T,row.names = 1)");
+			rsession.silentlyEval(inputmatrixname+" <- as.matrix("+inputmatrixname+")");
+            MTUFileUtils.deleteFile(tempdatasetfile);
+		} catch (IOException e) {
+			LogMessageCenter.getLogger().addCriticalErrorMessage(e);
+		}
+		
+	}
+	
 	/**
 	 * Gets the base R ojects.
 	 *
@@ -492,6 +525,11 @@ public abstract class RBiclustAlgorithmCaller extends AbstractBiclusteringAlgori
 		
 	}
 	
+	@Override
+	public void reset() {
+		init();
+		this.listofbiclusters=null;
+	}
 	
 
 }

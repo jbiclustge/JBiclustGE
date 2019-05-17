@@ -17,6 +17,7 @@
  */
 package jbiclustge.propertiesmodules.readers;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -26,11 +27,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.javatuples.Pair;
 
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
-import jbiclustge.methods.algorithms.BiclusteringMethod;
 import jbiclustge.propertiesmodules.PropertiesModules;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.propertiesmodules.PropertyModuleLoader;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
+import pt.ornrocha.collections.MTUMapUtils;
 import pt.ornrocha.fileutils.MTUDirUtils;
+import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.systemutils.OSystemUtils;
 
 // TODO: Auto-generated Javadoc
@@ -43,7 +46,10 @@ public class BiclusteringMethodsModuleLoader extends PropertyModuleLoader{
 	private String methodconfigurationsfolder;
 	
 	/** The methodsvsruns. */
-	private LinkedHashMap<AbstractBiclusteringAlgorithmCaller, Integer> methodsvsruns;
+	private LinkedHashMap<AbstractBiclusteringAlgorithmCaller, Pair<Integer, String>> methodsvsruns;
+	private LinkedHashMap<String, Integer> configpriorities;
+	
+	private String algorithmsconfigtype=PropertyLabels.ALGORITHMSCONFTYPESINGLE;
 
 	/**
 	 * Instantiates a new biclustering methods module loader.
@@ -63,75 +69,133 @@ public class BiclusteringMethodsModuleLoader extends PropertyModuleLoader{
 	@Override
 	public void loadProperties() throws Exception {
 
-		if(props.containsKey(PropertiesModules.ALGORITHMCONFIGURATIONSFOLDER) && !props.getProperty(PropertiesModules.ALGORITHMCONFIGURATIONSFOLDER).isEmpty()){
-
-			methodconfigurationsfolder=props.getProperty(PropertiesModules.ALGORITHMCONFIGURATIONSFOLDER);
+		//if(props.containsKey(PropertyLabels.ALGORITHMCONFIGURATIONSFOLDER) && !props.getProperty(PropertiesModules.ALGORITHMCONFIGURATIONSFOLDER).isEmpty()){
+          if(PropertiesUtilities.isValidProperty(props, PropertyLabels.ALGORITHMCONFIGURATIONSFOLDER)) {
+			methodconfigurationsfolder=props.getProperty(PropertyLabels.ALGORITHMCONFIGURATIONSFOLDER);
 			if(OSystemUtils.isWindows())
 				methodconfigurationsfolder=OSystemUtils.validatePath(methodconfigurationsfolder);
-			//methodconfigurationsfolder.replace("\\", "/");
 
-
-			String typemethodsconfig=props.getProperty(PropertiesModules.ALGORITHMSCONFTYPE);
+			String typemethodsconfig=props.getProperty(PropertyLabels.ALGORITHMSCONFTYPE);
 
 			HashMap<String, Integer> mapmethodnumberruns=new HashMap<>();
+			
+			
+			if(PropertiesUtilities.isValidProperty(props, PropertyLabels.ALGORITHMCONFIGURATIONSFOLDERBYRUNTIME)) {
+				String foldername=props.getProperty(PropertyLabels.ALGORITHMCONFIGURATIONSFOLDERBYRUNTIME);
+				
+				String tmpfolder=FilenameUtils.concat(methodconfigurationsfolder, foldername);
+				if(new File(tmpfolder).exists() && new File(tmpfolder).isDirectory())
+					methodconfigurationsfolder=tmpfolder;
+			}
+			
 
-			if(typemethodsconfig.equals(PropertiesModules.ALGORITHMSCONFTYPEMULTI)) {
+			ArrayList<String> methodsconfigpaths=MTUDirUtils.getFilePathsInsideDirectory(methodconfigurationsfolder);
+
+			for (String path : methodsconfigpaths) {
+				String configname=FilenameUtils.getBaseName(path);
+				if(props.containsKey(configname))
+					mapmethodnumberruns.put(configname,Integer.parseInt(props.getProperty(configname)));
+			}
 
 
-				ArrayList<String> methodsconfigpaths=MTUDirUtils.getFilePathsInsideDirectory(methodconfigurationsfolder);
+			LinkedHashMap<String, Integer> mapconfigvspriority=new LinkedHashMap<>();
 
-				for (String path : methodsconfigpaths) {
-					String configname=FilenameUtils.getBaseName(path);
-					if(props.containsKey(configname))
-						mapmethodnumberruns.put(configname,Integer.parseInt(props.getProperty(configname)));
-				}
+			int prioconfigs=0;
 
-				LinkedHashMap<String,AbstractBiclusteringAlgorithmCaller> methods=AlgorithmProperties.loadBiclusterMethodsAssociatedToConfigurationsInDirectory(methodconfigurationsfolder);
-
-				if(methods.size()>0){
-					methodsvsruns=new LinkedHashMap<>();
-
-					for (String id : methods.keySet()) {
-
-						if(mapmethodnumberruns.containsKey(id))
-							methodsvsruns.put(methods.get(id), mapmethodnumberruns.get(id));
-						else
-							methodsvsruns.put(methods.get(id), 1);
-
+			for (String path : methodsconfigpaths) {
+				String configname=FilenameUtils.getBaseName(path);
+				if(props.containsKey(PropertyLabels.PRIORITYTAG+configname)) {
+					String prio=props.getProperty(PropertyLabels.PRIORITYTAG+configname);
+					if(prio!=null && !prio.isEmpty()) {
+						int prionumb=0;
+						try {
+							prionumb=Integer.parseInt(prio);	
+						} catch (Exception e) {
+							prionumb=0;
+						}
+						if(prionumb>0)
+							prioconfigs++;
+						mapconfigvspriority.put(configname, prionumb);
 					}
+				}
+				else {
+					mapconfigvspriority.put(configname, 0);
+				}
+			}
 
+			/*	LinkedHashMap<String, Integer> orderedmapconfigvspriority=null;
+
+			if(prioconfigs>0)
+				orderedmapconfigvspriority=(LinkedHashMap<String, Integer>) MTUMapUtils.sortMapByValues(mapconfigvspriority, false);
+			else
+				orderedmapconfigvspriority=mapconfigvspriority;*/
+
+
+			if(typemethodsconfig.equals(PropertyLabels.ALGORITHMSCONFTYPEMULTI)) {
+
+				algorithmsconfigtype=PropertyLabels.ALGORITHMSCONFTYPEMULTI;
+
+				methodsvsruns=new LinkedHashMap<>();
+
+				ArrayList<Pair<AbstractBiclusteringAlgorithmCaller, String>> methods=null;
+
+				if(prioconfigs>0)
+					methods=AlgorithmProperties.loadBiclusterMethodsAssociatedToConfigurationsInDirectoryByNumberRunsAndPriority(methodconfigurationsfolder, mapmethodnumberruns, mapconfigvspriority);
+				else
+					methods=AlgorithmProperties.loadBiclusterMethodsAssociatedToConfigurationsInDirectoryByNumberRuns(methodconfigurationsfolder, mapmethodnumberruns);
+
+				for (int i = 0; i < methods.size(); i++) {
+					methodsvsruns.put(methods.get(i).getValue0(), new Pair<Integer, String>(1,methods.get(i).getValue1()));
 				}
 			}
 			else {
-				for (BiclusteringMethod method : BiclusteringMethod.values()) {
-					if(props.containsKey(PropertiesModules.NUMBERRUNSPREFIX+method.getName()))
-						mapmethodnumberruns.put(method.getNameInMethodClass(), Integer.parseInt(props.getProperty(PropertiesModules.NUMBERRUNSPREFIX+method.getName())));
+
+				LinkedHashMap<String,AbstractBiclusteringAlgorithmCaller> methods=AlgorithmProperties.loadBiclusterMethodsAssociatedToConfigurationsInDirectory(methodconfigurationsfolder);
+
+				LinkedHashMap<String, AbstractBiclusteringAlgorithmCaller> orderedmethods=null;
+
+				if(prioconfigs>0) {
+					orderedmethods=new LinkedHashMap<>();
+					LinkedHashMap<String, Integer> orderedmapconfigvspriority=new LinkedHashMap<>();
+					//mapconfigvspriority=(LinkedHashMap<String, Integer>) MTUMapUtils.sortMapByValues(mapconfigvspriority, false);
+					
+					for (String configname : methods.keySet()) {
+                        if(mapconfigvspriority.containsKey(configname))
+                        	orderedmapconfigvspriority.put(configname, mapconfigvspriority.get(configname));
+                        else
+                        	orderedmapconfigvspriority.put(configname, 0);
+					}
+					
+					orderedmapconfigvspriority=(LinkedHashMap<String, Integer>) MTUMapUtils.sortMapByValues(orderedmapconfigvspriority, false);
+					
+					for (String config : orderedmapconfigvspriority.keySet()) {
+						orderedmethods.put(config, methods.get(config));
+					}
+					
 				}
+				else
+					orderedmethods=methods;
 
 
-				ArrayList<AbstractBiclusteringAlgorithmCaller> methods=AlgorithmProperties.loadBiclusterMethodsFromConfigurationsInDirectory(methodconfigurationsfolder);
 
-				if(methods.size()>0){
+				if(orderedmethods.size()>0){
 					methodsvsruns=new LinkedHashMap<>();
 
-					for (int i = 0; i < methods.size(); i++) {
-						String namemethod=methods.get(i).getAlgorithmName();
-						if(mapmethodnumberruns.containsKey(namemethod))
-							methodsvsruns.put(methods.get(i), mapmethodnumberruns.get(namemethod));
+					for (String id : orderedmethods.keySet()) {
+						if(mapmethodnumberruns.containsKey(id))
+							methodsvsruns.put(methods.get(id), new Pair<Integer, String>(mapmethodnumberruns.get(id),id));
 						else
-							methodsvsruns.put(methods.get(i), 1);
+							methodsvsruns.put(methods.get(id), new Pair<Integer, String>(1,id));
+
 					}
+					
+					//System.out.println(methodsvsruns);
 				}
 			}
-
 		}
-
 	}
-	
-	
-	
-
-	
+				
+		
 
 	/**
 	 * Gets the method configurationsfolder.
@@ -141,15 +205,18 @@ public class BiclusteringMethodsModuleLoader extends PropertyModuleLoader{
 	public String getMethodConfigurationsfolder() {
 		return methodconfigurationsfolder;
 	}
+	
 
-
+	public String getAlgorithmsConfigurationType() {
+		return algorithmsconfigtype;
+	}
 
 	/**
 	 * Gets the methods to run.
 	 *
 	 * @return the methods to run
 	 */
-	public LinkedHashMap<AbstractBiclusteringAlgorithmCaller, Integer> getMethodsToRun() {
+	public LinkedHashMap<AbstractBiclusteringAlgorithmCaller, Pair<Integer, String>> getMethodsToRun() {
 		return methodsvsruns;
 	}
 
@@ -169,6 +236,7 @@ public class BiclusteringMethodsModuleLoader extends PropertyModuleLoader{
 	}
 
 
+	
 
 	/**
 	 * The main method.
@@ -178,6 +246,14 @@ public class BiclusteringMethodsModuleLoader extends PropertyModuleLoader{
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
+	}
+
+
+
+	@Override
+	public HashMap<String, Object> getMapOfProperties() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

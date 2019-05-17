@@ -21,17 +21,16 @@
 package jbiclustge.enrichmentanalysistools.common;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.javatuples.Pair;
 import org.math.R.Rsession;
 
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.rtools.JavaToRUtils;
-import jbiclustge.utils.properties.JBiGePropertiesManager;
-import jbiclustge.utils.properties.JBiclustGEPropertiesInitializer;
-import jrplot.rbinders.functioncallers.AbstractRFunctionCallerSingleDataset;
+import jbiclustge.utils.osystem.JBiclustGESetupManager;
+import jbiclustge.utils.props.JBiGePropertiesManager;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.rtools.connectors.RConnector;
 import pt.ornrocha.rtools.installutils.RInstallTools;
@@ -140,12 +139,13 @@ public abstract class RgseaAnalyserProcessor extends EnrichmentAnalyserProcessor
 		
 		boolean valid=false;
 		changesupport.firePropertyChange(EnrichmentAnalyserProcessor.FIREPROPERTYGSEACHANGETASKSTATUS, null, "Validating if "+getTypeAnalyserProcessor().toString()+" can execute");
-		String Rpath=RInstallTools.getSystemR_HOME();
-		if(Rpath!=null && !Rpath.isEmpty()){
+		String Rpath=RInstallTools.getSystemR_PATH();
+		
+		if(Rpath!=null && !Rpath.isEmpty() && !Rpath.equals(RInstallTools.NONE_R_HOME)){
 			
 			Pair<String, String> rserveparam=JavaToRUtils.getRServeParameters();
 			
-			String Ruserlib=(String) JBiGePropertiesManager.getManager().getKeyValue(JBiclustGEPropertiesInitializer.RUSERLIBPATH);
+			String Ruserlib=(String) JBiGePropertiesManager.getManager().getKeyValue(PropertyLabels.RUSERLIBPATH);
 			
 			int port=0;
 			try {
@@ -213,7 +213,7 @@ public abstract class RgseaAnalyserProcessor extends EnrichmentAnalyserProcessor
 		rsession.end();
 		if(!r) {
 			LogMessageCenter.getLogger().toClass(getClass()).addCriticalErrorMessage("An error has occured during the Gene enrichment analysis, please try again");
-			throw new GSEANullResultsException();
+			throw new GSEANullResultsException(getTypeAnalyserProcessor());
 		}
 	}
 	
@@ -228,9 +228,9 @@ public abstract class RgseaAnalyserProcessor extends EnrichmentAnalyserProcessor
 	protected boolean loadRequiredLibraries(ArrayList<RPackageInfo> libs, String RLibPath) throws Exception{
 
 		if(libs!=null && RLibPath!=null)
-			return RConnector.loadRequiredLibraries(rsession, libs, RLibPath);
+			return RConnector.loadRequiredLibraries(rsession, libs, RLibPath, JBiclustGESetupManager.getShellFeatures());
 		else if(libs!=null && RLibPath==null)
-			return RConnector.loadRequiredLibraries(rsession,libs);
+			return RConnector.loadRequiredLibraries(rsession,libs,JBiclustGESetupManager.getShellFeatures());
 		else
 			return false;
 	}

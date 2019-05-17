@@ -404,23 +404,23 @@ public class BiclusteringGSEATaskCSVReporter implements IGSEABiclusteringReporte
 		StringBuilder str=new StringBuilder();
 		str.append("Bicluster "+(bicnumber+1)+"\n");
 		str.append(getTotalEnrichmentAnalysisHeader());
-		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapGOTermToGoName();
+		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapTermIDToTermName();
 		
 		
 		if(termidtoGtermname!=null){
 			for (String termid : termidtoGtermname.keySet()) {
 				str.append(termid+globaldelimiter);
 				str.append(termidtoGtermname.get(termid)+globaldelimiter);
-				if(bicinfo.getMapGOTerm2NumberAnnotatedPopulationGenes()!=null)
-					str.append(bicinfo.getMapGOTerm2NumberAnnotatedPopulationGenes().get(termid)+globaldelimiter);
-				if(bicinfo.getMapGOTerm2NumberAnnotatedStudyGenes()!=null)
-					str.append(bicinfo.getMapGOTerm2NumberAnnotatedStudyGenes().get(termid)+globaldelimiter);
-				if(bicinfo.mapMapGOTerm2NumberSignificantAnnotatedGenes()!=null)
-					str.append(bicinfo.mapMapGOTerm2NumberSignificantAnnotatedGenes().get(termid)+globaldelimiter);
-				if(bicinfo.getGOTermspvalues()!=null)
-					str.append(bicinfo.getGOTermspvalues().get(termid)+globaldelimiter);
-				if(bicinfo.getGOTermsadjustedpvalues()!=null)
-					str.append(bicinfo.getGOTermsadjustedpvalues().get(termid));
+				if(bicinfo.getMapTermIDs2NumberAnnotatedPopulationGenes()!=null)
+					str.append(bicinfo.getMapTermIDs2NumberAnnotatedPopulationGenes().get(termid)+globaldelimiter);
+				if(bicinfo.getMapTermIDs2NumberAnnotatedStudyGenes()!=null)
+					str.append(bicinfo.getMapTermIDs2NumberAnnotatedStudyGenes().get(termid)+globaldelimiter);
+				if(bicinfo.mapMapTermIDs2NumberSignificantAnnotatedGenes()!=null)
+					str.append(bicinfo.mapMapTermIDs2NumberSignificantAnnotatedGenes().get(termid)+globaldelimiter);
+				if(bicinfo.getTermIDspvalues()!=null)
+					str.append(bicinfo.getTermIDspvalues().get(termid)+globaldelimiter);
+				if(bicinfo.getTermIDsadjustedpvalues()!=null)
+					str.append(bicinfo.getTermIDsadjustedpvalues().get(termid));
 				str.append("\n");
 			}
 
@@ -493,7 +493,7 @@ public class BiclusteringGSEATaskCSVReporter implements IGSEABiclusteringReporte
 		
 		StringBuilder str=new StringBuilder();
 		str.append("Bicluster "+(bicnumber+1)+"\n");
-		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapGOTermToGoName();
+		LinkedHashMap<String, String> termidtoGtermname=bicinfo.getMapTermIDToTermName();
 		str.append(getBiclusterEnrichmentAnalysisWithPvalueCutoffHeader(termidtoGtermname));
 		
 		if(gotermlowerpvalue!=null && gotermlowerpvalue.size()>0){
@@ -501,14 +501,14 @@ public class BiclusteringGSEATaskCSVReporter implements IGSEABiclusteringReporte
 				String termid=gotermlowerpvalue.get(i);
 				str.append(termid+globaldelimiter);
 				str.append(termidtoGtermname.get(termid)+globaldelimiter);
-				if(bicinfo.getGOTermspvalues()!=null)
-					str.append(bicinfo.getGOTermspvalues().get(termid)+globaldelimiter);
-				if(bicinfo.getGOTermsadjustedpvalues()!=null)
-					str.append(bicinfo.getGOTermsadjustedpvalues().get(termid)+globaldelimiter);
-				if(bicinfo.getGenesAssociatedToGoTerm(termid)!=null)
-					str.append(bicinfo.getGenesAssociatedToGoTerm(termid)+globaldelimiter);
-			    if(bicinfo.getGenesAssociatedToGoTerm(termid)!=null && mapofprobset2geneidused!=null)
-			    	str.append(transformgeneidtoprobsetid(bicinfo.getGenesAssociatedToGoTerm(termid),mapofprobset2geneidused));
+				if(bicinfo.getTermIDspvalues()!=null)
+					str.append(bicinfo.getTermIDspvalues().get(termid)+globaldelimiter);
+				if(bicinfo.getTermIDsadjustedpvalues()!=null)
+					str.append(bicinfo.getTermIDsadjustedpvalues().get(termid)+globaldelimiter);
+				if(bicinfo.getGenesAssociatedToTermID(termid)!=null)
+					str.append(bicinfo.getGenesAssociatedToTermID(termid)+globaldelimiter);
+			    if(bicinfo.getGenesAssociatedToTermID(termid)!=null && mapofprobset2geneidused!=null)
+			    	str.append(transformgeneidtoprobsetid(bicinfo.getGenesAssociatedToTermID(termid),mapofprobset2geneidused));
 				str.append("\n");
 
 			}
@@ -529,14 +529,14 @@ public class BiclusteringGSEATaskCSVReporter implements IGSEABiclusteringReporte
 		EnrichmentAnalysisResultList l=enrichmentresults.filterAndProcessResults(pvalue, useadjustedpvalues);
 		writePercentageOfEnrichedBiclustersWithPvalue(pvalue,l);
 		
-		LinkedHashMap<String, Double> termidfrequency=l.getGotermFrequency();
+		LinkedHashMap<String, Double> termidfrequency=l.getTermidsFrequency();
 		
 		StringBuilder str =new StringBuilder();
 		str.append("Term ID"+globaldelimiter+"Term name"+globaldelimiter+"Frequency (%)"+"\n");
 		if(termidfrequency.size()>0)
 			  for (String tid : termidfrequency.keySet()) {
 				   str.append(tid+globaldelimiter);
-				   str.append(enrichmentresults.getGoid2goterm().get(tid)+globaldelimiter);
+				   str.append(enrichmentresults.gettermid2termname().get(tid)+globaldelimiter);
 				   str.append(termidfrequency.get(tid)*100+"\n");
 			 }
 		

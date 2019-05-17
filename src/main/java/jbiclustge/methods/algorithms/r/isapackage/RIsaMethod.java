@@ -21,9 +21,8 @@
 package jbiclustge.methods.algorithms.r.isapackage;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -34,18 +33,17 @@ import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.BinarizationDecision;
+import jbiclustge.datatools.expressiondata.processdata.binarization.BinarizationDecision;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.methods.algorithms.r.RBiclustAlgorithmCaller;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
 import pt.ornrocha.rtools.rfunctions.MTURfunctions;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -76,9 +74,12 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 	
 	/** The rowthresholds. */
 	private double[] rowthresholds;
+	private double singlerowthreshold=-1.0;
 	
 	/** The columnthresholds. */
 	private double[] columnthresholds;
+	private double singlecolumnthreshold=-1.0;
+	
 	
 	/** The numberseeds. */
 	private int numberseeds=100;
@@ -176,6 +177,11 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 	
 
 
+	public void setRowSingleTreshold(double value) {
+		if(value>0)
+			this.singlerowthreshold=value;
+	}
+	
 	/**
 	 * Sets the row thresholds.
 	 *
@@ -184,7 +190,7 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 	public void setRowThresholds(double[] rowthresholds) {
 		this.rowthresholds = rowthresholds;
 	}
-
+	
 	/**
 	 * Sets the row thresholds.
 	 *
@@ -213,6 +219,13 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 		setRowThresholds(init, end, interval);
 		return this;
 	}
+	
+	
+	public void setColumnSingleTreshold(double value) {
+		if(value>0)
+			this.singlecolumnthreshold=value;
+	}
+	
 	
 	/**
 	 * Sets the column thresholds.
@@ -341,8 +354,16 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 		String rowthresh=PropertiesUtilities.getStringPropertyValue(props, ISA_ROWTHRESHOLDS, null, this.getClass());
 		String colthresh=PropertiesUtilities.getStringPropertyValue(props, ISA_COLUMNTHRESHOLDS, null, this.getClass());
 		try {
-			this.rowthresholds=getThresholsFromString(rowthresh);
-			this.columnthresholds=getThresholsFromString(colthresh);
+			double[] tmprowthresh=getThresholsFromString(rowthresh);
+			double[] tmpcolthresh=getThresholsFromString(colthresh);
+			if((tmprowthresh!=null && tmprowthresh.length==1) && (tmpcolthresh!=null && tmpcolthresh.length==1)) {
+				singlerowthreshold=tmprowthresh[0];
+				singlecolumnthreshold=tmpcolthresh[0];
+			}
+			else {
+				this.rowthresholds=tmprowthresh;
+			    this.columnthresholds=tmpcolthresh;
+			}
 		} catch (NumberFormatException | RserveException | REXPMismatchException e) {
 			LogMessageCenter.getLogger().addCriticalErrorMessage("Error in loading properties of "+getAlgorithmName()+": ", e);
 		}
@@ -367,8 +388,8 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 				"Integer scalar, the number of seeds to use",
 				"It specifies whether we are interested in rows that are higher (up) than average, lower than average(down), or both (updown)",
 				"It specifies whether we are interested in columns that are higher (up) than average, lower than average(down), or both (updown)",
-				"Numeric vector, can be defined as following: (1) numbers separated by semi-colon -> 1;1.5;3;4.5;6, (2) defining a range (1:6) with interval 3 as follows -> 1:6:3",
-				"Numeric vector, can be defined as following: (1) numbers separated by semi-colon -> 1;1.5;3;4.5;6, (2) defining a range (1:6) with interval 3 as follows -> 1:6:3"
+				"Numeric vector, can be defined as following: (1) single number (e.g. 2 or 2.0) (2) numbers separated by semi-colon -> 1;1.5;3;4.5;6, (3) defining a range (1:6) with interval 3 as follows -> 1:6:3",
+				"Numeric vector, can be defined as following: (1) single number (e.g. 2 or 2.0) (2) numbers separated by semi-colon -> 1;1.5;3;4.5;6, (3) defining a range (1:6) with interval 3 as follows -> 1:6:3"
 		};
 		
 		return AlgorithmProperties.setupProperties(propkeys, defaultvalues, comments,"Source: isa2 manual, url: https://cran.r-project.org/web/packages/isa2/isa2.pdf");
@@ -379,46 +400,61 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 	 */
 	@Override
 	protected boolean runAlgorithm() throws Exception {
-		
 
-		
+
+
 		try {
-			loadExpressionMatrixInREnvironment();
+			//loadExpressionMatrixInREnvironment();
+			loadLabeledExpressionMatrixInREnvironment();
 			LogMessageCenter.getLogger().toClass(getClass()).addInfoMessage("Starting ISA clustering method...please wait");
-			if(rowthresholds==null)
-				rowthresholds=MTURfunctions.getSequence(rsession,1, 3, 0.5);
-			rsession.set(("rowthresholds"+getlabel()), rowthresholds);
-			
-			if(columnthresholds==null)
-				columnthresholds=MTURfunctions.getSequence(rsession,1, 3, 0.5);
-			rsession.set(("columnthresholds"+getlabel()), columnthresholds);
-			
+
+			//boolean usesingletreshold=false;
+
+			if(singlerowthreshold!=-1 & singlecolumnthreshold!=-1) {
+                 rsession.set(("rowthresholds"+getlabel()), singlerowthreshold);
+                 rsession.set(("columnthresholds"+getlabel()), singlecolumnthreshold);
+                 //usesingletreshold=true;
+			}
+			else {
+
+				if(rowthresholds==null)
+					rowthresholds=MTURfunctions.getSequence(rsession,1, 3, 0.5);
+				rsession.set(("rowthresholds"+getlabel()), rowthresholds);
+
+				if(columnthresholds==null)
+					columnthresholds=MTURfunctions.getSequence(rsession,1, 3, 0.5);
+				rsession.set(("columnthresholds"+getlabel()), columnthresholds);
+			}
+
 			rsession.set(("dirvector"+getlabel()), getDirection());
+
+			 Instant start = Instant.now();
 			
-			Date starttime =Calendar.getInstance().getTime();
-			
-			rsession.silentlyEval(getResultOutputName()+" <- isa("+inputmatrixname+", thr.row=rowthresholds"+getlabel()+", thr.col=columnthresholds"+getlabel()+", no.seeds="
-			       +String.valueOf(numberseeds)+", direction=dirvector"+getlabel()+" )",true);
+			/*if(usesingletreshold)
+				rsession.silentlyEval(getResultOutputName()+" <- isa("+inputmatrixname+", thr.row=rowthresholds"+getlabel()+", thr.col=columnthresholds"+getlabel()+", no.seeds="
+						+String.valueOf(numberseeds)+", direction=dirvector"+getlabel()+" )",true);
+			else*/
+				rsession.silentlyEval(getResultOutputName()+" <- isa("+inputmatrixname+", thr.row=rowthresholds"+getlabel()+", thr.col=columnthresholds"+getlabel()+", no.seeds="
+					+String.valueOf(numberseeds)+", direction=dirvector"+getlabel()+" )",true);
+
 			
 			String convbicname="conv_"+getResultOutputName();
 			rsession.silentlyEval(convbicname+" <- isa.biclust("+getResultOutputName()+")");
-			
-			
-			Date endtime=Calendar.getInstance().getTime();
-			long runtime=endtime.getTime()-starttime.getTime();	
-			runningtime=MTUTimeUtils.getTimeElapsed(runtime);
-			
+
+
+			saveElapsedTime(start);
+
 			writeBiclusterResultsToFileWithOriginalAlgorithmMethod(convbicname);
-	       /* if(writeoriginalresultstofile!=null){
+			/* if(writeoriginalresultstofile!=null){
 			    c.eval("writeBiclusterResults(\""+writeoriginalresultstofile+"\","+convbicname+",\"output_"+NAME+"\",rownames("+inputmatrixname+"),colnames("+inputmatrixname+"))");
 	        }*/
-			
+
 		} catch (Exception e) {
 			LogMessageCenter.getLogger().addCriticalErrorMessage("Error in execution of "+getAlgorithmName()+": ", e);
 			return false;
 		}
-		
-		
+
+
 		return true;
 	}
 	
@@ -559,6 +595,16 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 				}
 					
 			}
+			else {
+				double[]res=null;
+				try {
+					double val=Double.parseDouble(value);
+					res= new double[]{val};
+				} catch (Exception e) {
+					return null;
+				}
+				return res;
+			}
 			
 		}
 		return null;
@@ -591,8 +637,14 @@ public class RIsaMethod extends RBiclustAlgorithmCaller{
 		parameters.setKeyintValue(ISA_NUMBERSEEDS, numberseeds);
 		parameters.setKeyStringValue(ISA_ROWDIRECTION, direction.getValue0().getISAFormat());
 		parameters.setKeyStringValue(ISA_COLUMNDIRECTION, direction.getValue1().getISAFormat());
-		parameters.setKeyStringValue(ISA_ROWTHRESHOLDS,getThresholdstoString(rowthresholds));
-		parameters.setKeyStringValue(ISA_COLUMNTHRESHOLDS, getThresholdstoString(columnthresholds));
+		if(singlerowthreshold!=-1 & singlecolumnthreshold!=-1) {
+			parameters.setKeyStringValue(ISA_ROWTHRESHOLDS,String.valueOf(singlerowthreshold));
+			parameters.setKeyStringValue(ISA_COLUMNTHRESHOLDS, String.valueOf(singlecolumnthreshold));
+		}
+		else {
+			parameters.setKeyStringValue(ISA_ROWTHRESHOLDS,getThresholdstoString(rowthresholds));
+			parameters.setKeyStringValue(ISA_COLUMNTHRESHOLDS, getThresholdstoString(columnthresholds));
+		}
 		return parameters;
 	}
 

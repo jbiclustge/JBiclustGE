@@ -103,11 +103,12 @@ public class COALESCEResultsProcessor extends AbstractProcessProgressionChecker{
 	           else if(currentline.matches("Conditions\\s+\\w+.*")){
 	        	  setListIDs(currentconditionlist, currentline);
 	        	  if(currentgenelist!=null && currentconditionlist!=null)
-	        		  currentbicluster=new BiclusterResult(originaldataset, currentgenelist, currentconditionlist);
+	        		  currentbicluster=new BiclusterResult(originaldataset,true, currentgenelist, currentconditionlist);
+	        		  //currentbicluster=new BiclusterResult(originaldataset, currentgenelist, currentconditionlist);
 	           }
 	           else if(currentline.matches("Motifs\\s+\\w+.*")){
 	        	   setListIDs(motiflist,currentline);
-	        	   System.out.println(currentline);
+	        	   //System.out.println(currentline);
 	           }
 	          // MTULogUtils.addDebugMsgToClass(this.getClass(), currentline);
 	        }
@@ -157,6 +158,13 @@ public class COALESCEResultsProcessor extends AbstractProcessProgressionChecker{
 	@Override
 	public Object getResultsObject() {
 		return listbiclusters;
+	}
+
+
+	@Override
+	public AbstractProcessProgressionChecker copyInstance() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	

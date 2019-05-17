@@ -20,11 +20,13 @@ package jbiclustge.execution.controlcenters.common;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
-import jbiclustge.utils.properties.AlgorithmProperties;
+import jbiclustge.utils.props.AlgorithmProperties;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import smile.imputation.MissingValueImputationException;
 
@@ -38,6 +40,8 @@ public abstract class AbstractBiclusteringControlCenter {
 	
 	/** The biclustmethods. */
 	protected ArrayList<AbstractBiclusteringAlgorithmCaller> biclustmethods;
+	protected ArrayList<String> confignamelist;
+	protected Map<String, Object> props=null;
 	
 	/** The data. */
 	protected ExpressionData data;
@@ -51,8 +55,16 @@ public abstract class AbstractBiclusteringControlCenter {
 		   this.data=data;
 	}
 	
+	public void setMapOfProperties(Map<String, Object> props) {
+		this.props=props;
+	}
 	
 	
+	public void addPropertytoMap(String key, Object value) {
+		if(props==null)
+			props=new HashMap<>();
+		props.put(key, value);
+	}
 	
 	/**
 	 * Adds the biclustering method use properties.
@@ -86,6 +98,13 @@ public abstract class AbstractBiclusteringControlCenter {
 	 */
 	public void addBiclusteringMethod(AbstractBiclusteringAlgorithmCaller method){
 		addBiclusteringMethodUseProperties(method,null);
+	}
+	
+	public void addBiclusteringMethod(AbstractBiclusteringAlgorithmCaller method, String configname){
+		addBiclusteringMethodUseProperties(method,null);
+		if(confignamelist==null)
+			confignamelist=new ArrayList<>();
+		confignamelist.add(configname);
 	}
 	
 	/**

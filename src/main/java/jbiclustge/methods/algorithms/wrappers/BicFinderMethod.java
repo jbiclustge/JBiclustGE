@@ -33,8 +33,8 @@ import java.util.Properties;
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
-import jbiclustge.utils.properties.AlgorithmProperties;
-import jbiclustge.utils.properties.CommandsProcessList;
+import jbiclustge.utils.props.AlgorithmProperties;
+import jbiclustge.utils.props.CommandsProcessList;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 

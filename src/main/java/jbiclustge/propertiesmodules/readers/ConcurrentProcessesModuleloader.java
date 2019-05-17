@@ -17,11 +17,12 @@
  */
 package jbiclustge.propertiesmodules.readers;
 
+import java.util.HashMap;
 import java.util.Properties;
 
-import jbiclustge.propertiesmodules.PropertiesModules;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.propertiesmodules.PropertyModuleLoader;
-import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
+import pt.ornrocha.propertyutils.PropertiesUtilities;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -51,14 +52,8 @@ public class ConcurrentProcessesModuleloader extends PropertyModuleLoader{
 	@Override
 	public void loadProperties() throws Exception {
 		
-		if(props.containsKey(PropertiesModules.SIMULTANEOUSPROCESSES)){
-			try {
-				nprocesses=Integer.parseInt(props.getProperty(PropertiesModules.SIMULTANEOUSPROCESSES));
-			} catch (Exception e) {
-				LogMessageCenter.getLogger().addDebugMessage("Error in parsing value to "+PropertiesModules.SIMULTANEOUSPROCESSES+" using default value =1");
-				nprocesses=1;
-			}
-			
+		if(PropertiesUtilities.isValidProperty(props, PropertyLabels.SIMULTANEOUSPROCESSES)) {
+			nprocesses=PropertiesUtilities.getIntegerPropertyValue(props, PropertyLabels.SIMULTANEOUSPROCESSES, 1, getClass());
 		}
 	}
 	
@@ -78,7 +73,7 @@ public class ConcurrentProcessesModuleloader extends PropertyModuleLoader{
 	 * @param props the props
 	 * @return the number concurrent processes from loader
 	 */
-	public static int getNumberConcurrentProcessesFromLoader(Properties props){
+	public static Integer getNumberConcurrentProcessesFromLoader(Properties props){
 		ConcurrentProcessesModuleloader reader = null;
 		try {
 			reader = new ConcurrentProcessesModuleloader(props);
@@ -99,5 +94,12 @@ public class ConcurrentProcessesModuleloader extends PropertyModuleLoader{
 	 */
 	public static ConcurrentProcessesModuleloader load(Properties props) throws Exception{
 		return new ConcurrentProcessesModuleloader(props);
+	}
+
+	@Override
+	public HashMap<String, Object> getMapOfProperties() {
+		HashMap<String, Object> param=new HashMap<>();
+		param.put(PropertyLabels.SIMULTANEOUSPROCESSES, nprocesses);
+		return param;
 	}
 }

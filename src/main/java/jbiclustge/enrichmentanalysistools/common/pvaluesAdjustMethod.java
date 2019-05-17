@@ -18,13 +18,13 @@
  *  
  * Created by Orlando Rocha (ornrocha@gmail.com) inside BIOSYSTEMS Group (https://www.ceb.uminho.pt/BIOSYSTEMS)
  */
-package jbiclustge.enrichmentanalysistools.topgo.components;
+package jbiclustge.enrichmentanalysistools.common;
 
 // TODO: Auto-generated Javadoc
 /**
  * The Enum TopGopvaluesAdjustMethod.
  */
-public enum TopGopvaluesAdjustMethod {
+public enum pvaluesAdjustMethod {
 
 	/** The none. */
 	/*	"holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"*/
@@ -98,14 +98,14 @@ public enum TopGopvaluesAdjustMethod {
 	 * @param mtcmethod the mtcmethod
 	 * @return the MTC method from string
 	 */
-	public static TopGopvaluesAdjustMethod getMTCMethodFromString(String mtcmethod){
+	public static pvaluesAdjustMethod getMTCMethodFromString(String mtcmethod){
 		if(mtcmethod!=null){
-			for (TopGopvaluesAdjustMethod method : TopGopvaluesAdjustMethod.values()) {
+			for (pvaluesAdjustMethod method : pvaluesAdjustMethod.values()) {
 				if(mtcmethod.toLowerCase().equals(method.toString().toLowerCase()))
 					return method;
 			}
 		}
-		return TopGopvaluesAdjustMethod.NONE;
+		return pvaluesAdjustMethod.NONE;
 	}
 	
 	

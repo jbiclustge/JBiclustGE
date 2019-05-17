@@ -23,9 +23,7 @@ package jbiclustge.enrichmentanalysistools.topgo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,17 +36,17 @@ import jbiclustge.enrichmentanalysistools.common.EnrichmentAnalysisResultList;
 import jbiclustge.enrichmentanalysistools.common.EnrichmentAnalysisResultsContainer;
 import jbiclustge.enrichmentanalysistools.common.GSEAAnalyserType;
 import jbiclustge.enrichmentanalysistools.common.RgseaAnalyserProcessor;
+import jbiclustge.enrichmentanalysistools.common.pvaluesAdjustMethod;
 import jbiclustge.enrichmentanalysistools.topgo.components.TopGOAlgorithm;
 import jbiclustge.enrichmentanalysistools.topgo.components.TopGOAnnotationFunction;
 import jbiclustge.enrichmentanalysistools.topgo.components.TopGOMappingType;
 import jbiclustge.enrichmentanalysistools.topgo.components.TopGOStatistic;
 import jbiclustge.enrichmentanalysistools.topgo.components.TopGoPropertiesContainer;
-import jbiclustge.enrichmentanalysistools.topgo.components.TopGopvaluesAdjustMethod;
 import jbiclustge.enrichmentanalysistools.topgo.components.TopgoOntology;
+import jbiclustge.propertiesmodules.PropertyLabels;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
-import pt.ornrocha.printutils.MTUPrintUtils;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
 import pt.ornrocha.rtools.installutils.components.RPackageInfo;
 import pt.ornrocha.stringutils.MTUStringUtils;
@@ -104,7 +102,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 	private TopGOStatistic statistic=TopGOStatistic.fisher;
 	
 	/** The adjustpvaluesmethod. */
-	private TopGopvaluesAdjustMethod adjustpvaluesmethod=TopGopvaluesAdjustMethod.NONE;
+	private pvaluesAdjustMethod adjustpvaluesmethod=pvaluesAdjustMethod.NONE;
 	
 	/** The nodesize. */
 	//private double ajustedpvaluesthreshold=0.05;
@@ -259,7 +257,6 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 		super(listbiclusters, settings);
 		readProperties();
 		setlabel();
-		
 	}
 	
 	
@@ -287,7 +284,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 			TopGOAlgorithm algorithm,
 			TopGOStatistic statistic,
 			int nodesize,
-			TopGopvaluesAdjustMethod mtcmethod,
+			pvaluesAdjustMethod mtcmethod,
 			String filesep,
 			String idsep,
 			Map<String, String> mapofprobset2geneid){
@@ -506,7 +503,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 	 *
 	 * @param mtc the new MTC method
 	 */
-	public void setMTCMethod(TopGopvaluesAdjustMethod mtc){
+	public void setMTCMethod(pvaluesAdjustMethod mtc){
 		this.adjustpvaluesmethod=mtc;
 	}
 	
@@ -516,7 +513,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 	 * @param mtc the mtc
 	 * @return the top GO enrichment analyser
 	 */
-	public TopGOEnrichmentAnalyser addMTCMethod(TopGopvaluesAdjustMethod mtc){
+	public TopGOEnrichmentAnalyser addMTCMethod(pvaluesAdjustMethod mtc){
 		this.adjustpvaluesmethod=mtc;
 		return this;
 	}
@@ -567,6 +564,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 	protected boolean executeRgseaProcess() throws Exception {
 
 		changesupport.firePropertyChange(FIREPROPERTYGSEACHANGESUBTASKSTATUS, null, "Configuring Population...");
+		
 
 		if(!stopproc) {
 			configureTotalGeneNameList();
@@ -629,6 +627,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 	@Override
 	protected void readProperties() {
 		
+		
 		if(props!=null){
 			setOntologyType(PropertiesUtilities.getStringPropertyValue(props, TopGoPropertiesContainer.ONTOLOGY, null, null));
 			setAlgorithm(PropertiesUtilities.getStringPropertyValue(props, TopGoPropertiesContainer.ALGORITHM, null, null));	
@@ -668,7 +667,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 					annfun=TopGOAnnotationFunction.annfunDB;
 
 			}
-			String probid2annotationid=PropertiesUtilities.getStringPropertyValue(props, TopGoPropertiesContainer.MAPPROBEID2GENEID, null, getClass());
+			String probid2annotationid=PropertiesUtilities.getStringPropertyValue(props, PropertyLabels.MAPPROBEID2GENEID, null, getClass());
 		    	if(probid2annotationid!=null){
 		    		try {
 		    			readMapProbeSetIDToGeneIDFromFile(OSystemUtils.validatePath(probid2annotationid));
@@ -678,7 +677,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 		    	}
 		 
 		    	String mtcmethod=PropertiesUtilities.getStringPropertyValue(props, TopGoPropertiesContainer.MCTMETHOD, "none", getClass());
-		    	adjustpvaluesmethod=TopGopvaluesAdjustMethod.getMTCMethodFromString(mtcmethod);
+		    	adjustpvaluesmethod=pvaluesAdjustMethod.getMTCMethodFromString(mtcmethod);
 			
 		}
 		
@@ -695,7 +694,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 		tempresultlist.setUnannotatedGeneNames(unannotatedgenes);
 		tempresultlist.setBiclusterlistAssociated(listofbiclusters);
 		
-		tempresultlist.setWasUsedMCTMethod(!adjustpvaluesmethod.equals(TopGopvaluesAdjustMethod.NONE)?true:false);
+		tempresultlist.setWasUsedMCTMethod(!adjustpvaluesmethod.equals(pvaluesAdjustMethod.NONE)?true:false);
 		
 		return tempresultlist;
 	}
@@ -706,6 +705,8 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 	 */
 	protected void configureTotalGeneNameList() throws Exception{
 		ArrayList<String> tempgenenamelist=listofbiclusters.getAnalysedDataset().getGeneNamesList();
+		
+		System.out.println(tempgenenamelist);
 		
 		ArrayList<String> temptotalgenelist=new ArrayList<>();
 		
@@ -726,12 +727,13 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 
 		
 		ArrayList<String> allowedids=getAllowedGenesInAnnotation();
-	    
+		
+
 		if(allowedids.size()>0)
 			temptotalgenelist.retainAll(allowedids);
 
 		if(temptotalgenelist.size()>0) {
-			
+			System.out.println("Genes Found That Match Annotation: "+temptotalgenelist);
 			totalgenenamelist=temptotalgenelist.toArray(new String[tempgenenamelist.size()]);
 			setInputGeneList();
 		}
@@ -1002,7 +1004,7 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 
         adjustepvalues=null;
     
-		if(!adjustpvaluesmethod.equals(TopGopvaluesAdjustMethod.NONE)){	
+		if(!adjustpvaluesmethod.equals(pvaluesAdjustMethod.NONE)){	
 			adjustepvalues=rsession.eval((ADJUSTEDPVALUEVECTOR+objectlabel)+" <- p.adjust("+(CURRENTRESULTSTABLE+objectlabel)+"[,\"statspval"+objectlabel+"\"], method=\""+adjustpvaluesmethod.toString()+"\")").asStrings();
 			
 		}
@@ -1014,12 +1016,12 @@ public class TopGOEnrichmentAnalyser extends RgseaAnalyserProcessor{
 			
 			double pvalue=convertPvalueOutput(pvalues[i]);
 			if(pvalue<=maxpvalue){
-				results.addMapGoTermIDWithGOTermName(goid, goterms[i]);
-				results.addGOTermPValue(goid, convertPvalueOutput(pvalues[i]));
+				results.addMapTermIDWithTermName(goid, goterms[i]);
+				results.addTermPValue(goid, convertPvalueOutput(pvalues[i]));
 				if(adjustepvalues!=null){
-					results.addGOTermAdjustedPValue(goid, convertPvalueOutput(adjustepvalues[i]));
+					results.addTermAdjustedPValue(goid, convertPvalueOutput(adjustepvalues[i]));
 				}
-				results.addNumberSignificantAnnotatedGenesToGOTerm(goid, genessignificant[i]);
+				results.addNumberSignificantAnnotatedGenesToTermID(goid, genessignificant[i]);
 				results.addNumberAnnotatedGenesToGOTerm(goid, genesannotated[i]);
 				results.addToMapTerm2GeneAssociation(goid, getGenesInGoTermID(goid, rsession));
 			}

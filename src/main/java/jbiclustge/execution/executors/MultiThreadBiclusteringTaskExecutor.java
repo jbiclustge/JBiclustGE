@@ -29,7 +29,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import jbiclustge.utils.properties.JBiGePropertiesManager;
+import jbiclustge.utils.props.JBiGePropertiesManager;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 
 // TODO: Auto-generated Javadoc

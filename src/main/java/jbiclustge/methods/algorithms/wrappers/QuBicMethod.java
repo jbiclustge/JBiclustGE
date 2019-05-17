@@ -24,13 +24,11 @@ package jbiclustge.methods.algorithms.wrappers;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,14 +37,14 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import jbiclustge.datatools.expressiondata.dataset.ExpressionData;
-import jbiclustge.datatools.expressiondata.transformdata.binarization.IDiscretizationMethod;
+import jbiclustge.datatools.expressiondata.processdata.binarization.IDiscretizationMethod;
 import jbiclustge.methods.algorithms.AbstractBiclusteringAlgorithmCaller;
 import jbiclustge.methods.algorithms.RunningParametersReporter;
 import jbiclustge.results.biclusters.containers.BiclusterList;
 import jbiclustge.results.biclusters.containers.BiclusterResult;
 import jbiclustge.utils.osystem.SystemFolderTools;
-import jbiclustge.utils.properties.AlgorithmProperties;
-import jbiclustge.utils.properties.CommandsProcessList;
+import jbiclustge.utils.props.AlgorithmProperties;
+import jbiclustge.utils.props.CommandsProcessList;
 import pt.ornrocha.fileutils.MTUFileUtils;
 import pt.ornrocha.logutils.messagecomponents.LogMessageCenter;
 import pt.ornrocha.propertyutils.PropertiesUtilities;
@@ -54,7 +52,6 @@ import pt.ornrocha.stringutils.MTUStringUtils;
 import pt.ornrocha.stringutils.ReusableInputStream;
 import pt.ornrocha.swingutils.progress.GeneralProcessProgressionChecker;
 import pt.ornrocha.systemutils.OSystemUtils;
-import pt.ornrocha.timeutils.MTUTimeUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -554,13 +551,7 @@ public class QuBicMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		return NAME;
 	}
 	
-	/* (non-Javadoc)
-	 * @see methods.algorithms.AbstractBiclusteringAlgorithmCaller#getRunningTime()
-	 */
-	@Override
-	protected String getRunningTime() {
-		return runningtime;
-	}
+
 	
 	/**
 	 * Preconfigurealgorithm.
@@ -598,7 +589,7 @@ public class QuBicMethod extends AbstractBiclusteringAlgorithmCaller implements 
 			cmds.add("-d");
 		}
 		if(TFtosearch!=null){
-			cmds.insertStringParameter("-T", TFtosearch);
+			cmds.insertStringParameter("-T", getLabeledTFtoSearch());
 		}
 		if(enlargebicluster){
 			cmds.add("-P");
@@ -616,6 +607,10 @@ public class QuBicMethod extends AbstractBiclusteringAlgorithmCaller implements 
 	
 	}
 	
+	private String getLabeledTFtoSearch() {
+		return expressionset.transformToGeneLabel(TFtosearch);
+	}
+	
 	
 	/**
 	 * Configure input data.
@@ -630,9 +625,11 @@ public class QuBicMethod extends AbstractBiclusteringAlgorithmCaller implements 
 		datafilepath=FilenameUtils.concat(tempfolder, MTUStringUtils.shortUUID()+".txt");
 		
 		if(binarizationmethod!=null)
-			expressionset.writeExpressionDatasetToFile(datafilepath, binarizationmethod);
+			expressionset.writeExpressionDatasetLabeledFormatToFile(datafilepath, binarizationmethod);
+			//expressionset.writeExpressionDatasetToFile(datafilepath, binarizationmethod);
 		else
-			expressionset.writeExpressionDatasetToFile(datafilepath);
+			expressionset.writeExpressionDatasetLabeledFormatToFile(datafilepath);
+			//expressionset.writeExpressionDatasetToFile(datafilepath);
 	}
 	
 	
@@ -647,7 +644,7 @@ public class QuBicMethod extends AbstractBiclusteringAlgorithmCaller implements 
 			preconfigurealgorithm();
 			ProcessBuilder build= new ProcessBuilder(cmds);
 			 build.directory(new File(tempfolder));
-			 Date starttime =Calendar.getInstance().getTime();
+			 Instant start = Instant.now();
 			
 			final Process p =build.start();
 			InputStream inputstr =p.getInputStream();
@@ -678,10 +675,7 @@ public class QuBicMethod extends AbstractBiclusteringAlgorithmCaller implements 
 
 			int exitval=p.waitFor();
 			if(exitval==0){
-				Date endtime=Calendar.getInstance().getTime();
-				long runtime=endtime.getTime()-starttime.getTime();	
-				runningtime=MTUTimeUtils.getTimeElapsed(runtime);
-
+				saveElapsedTime(start);
 				return true;
 			}
 			else{
@@ -755,13 +749,15 @@ public class QuBicMethod extends AbstractBiclusteringAlgorithmCaller implements 
 	 * @param header the header
 	 * @param results the results
 	 * @return the bicluster result data
+	 * @throws IOException 
 	 */
-	protected BiclusterResult getBiclusterResultData(String header, ArrayList<String> results){
+	protected BiclusterResult getBiclusterResultData(String header, ArrayList<String> results) throws IOException{
 		
 		ArrayList<String> geneids=getObjectList(results.get(0),3);
 		ArrayList<String> condids=getObjectList(results.get(1),3);
 		
-		BiclusterResult resultscontainer=new BiclusterResult(expressionset, geneids, condids);
+		//BiclusterResult resultscontainer=new BiclusterResult(expressionset, geneids, condids);
+		BiclusterResult resultscontainer=new BiclusterResult(expressionset,true,geneids, condids);
 		String pval=filterpvalue(header);
 		if(pval!=null)
 			resultscontainer.appendAdditionalInfo(QUBICPVALUE, pval);
